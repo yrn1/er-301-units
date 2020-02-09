@@ -1,0 +1,729 @@
+-- Persistent Data
+local shared = {
+{};
+} -- shared
+shared[1]["SimpleString"] = "0.5.01";
+shared[1]["Name"] = "Myrrh (48kHz, 128smps)";
+shared[1]["Major"] = 0;
+shared[1]["Status"] = "unstable";
+shared[1]["Patch"] = 0;
+shared[1]["String"] = "0.5.01 (unstable)";
+shared[1]["Build"] = 1;
+shared[1]["Minor"] = 5;
+local obj1 = {
+	["unitVersion"] = 1;
+	["loadInfo"] = {
+		["libraryName"] = "builtins";
+		["title"] = "Custom Effect";
+		["keywords"] = "utility, effect, container";
+		["category"] = "Containers";
+		["moduleName"] = "Container.Effect";
+		["id"] = "Container.Effect";
+	};
+	["bands"] = {
+		[1] = {
+			["selection"] = {
+				["view"] = "expanded";
+				["section"] = 1;
+				["spot"] = 1;
+			};
+			["units"] = {
+				[1] = {
+					["unitVersion"] = 1;
+					["loadInfo"] = {
+						["libraryName"] = "builtins";
+						["title"] = "Dub Looper";
+						["keywords"] = "sampling, effect";
+						["category"] = "Recording and Looping";
+						["moduleName"] = "Looper.DubLooper";
+						["id"] = "Looper.DubLooper";
+					};
+					["hasUserTitle"] = true;
+					["activeView"] = "expanded";
+					["sample"] = {
+						["opts"] = {
+							["secs"] = 40.0;
+							["channels"] = 2;
+							["type"] = "buffer";
+						};
+						["path"] = "tmp/buffer-0015-01";
+						["slices"] = {
+							["rate"] = 48000.0;
+						};
+					};
+					["bypass"] = false;
+					["firmwareVersion"] = shared[1];
+					["controlBranches"] = {
+					};
+					["title"] = "Dub Looper";
+					["branches"] = {
+						["reset"] = {
+							["selection"] = {
+								["view"] = "expanded";
+								["section"] = 2;
+								["spot"] = 6;
+							};
+							["firmwareVersion"] = shared[1];
+							["channels"] = {
+								["count"] = 1;
+								["inputs"] = {
+									[1] = {
+										["name"] = "Clocked Looper (clock)";
+										["instanceKey"] = "a993b0cf";
+										["type"] = "local";
+									};
+								};
+							};
+							["instanceKey"] = "c05660dd";
+							["units"] = {
+								[1] = {
+									["unitVersion"] = 1;
+									["loadInfo"] = {
+										["libraryName"] = "builtins";
+										["title"] = "Tap Tempo";
+										["keywords"] = "measure, source, timing";
+										["category"] = "Timing";
+										["moduleName"] = "Timing.TapTempoUnit";
+										["id"] = "Timing.TapTempoUnit";
+									};
+									["hasUserTitle"] = true;
+									["activeView"] = "expanded";
+									["bypass"] = false;
+									["firmwareVersion"] = shared[1];
+									["controlBranches"] = {
+									};
+									["title"] = "Tap Tempo";
+									["branches"] = {
+										["multiplier"] = {
+											["selection"] = {
+												["view"] = "default";
+												["section"] = 0;
+												["spot"] = 1;
+											};
+											["firmwareVersion"] = shared[1];
+											["channels"] = {
+												["count"] = 1;
+												["inputs"] = {
+													[1] = {
+														["name"] = "Clocked Looper (mult)";
+														["instanceKey"] = "03ad71cd";
+														["type"] = "local";
+													};
+												};
+											};
+											["instanceKey"] = "912d6f37";
+											["units"] = {
+											};
+										};
+										["divider"] = {
+											["selection"] = {
+												["view"] = "default";
+												["section"] = 0;
+												["spot"] = 1;
+											};
+											["firmwareVersion"] = shared[1];
+											["channels"] = {
+												["count"] = 1;
+												["inputs"] = {
+													[1] = {
+														["name"] = "Clocked Looper (div)";
+														["instanceKey"] = "36c90a1b";
+														["type"] = "local";
+													};
+												};
+											};
+											["instanceKey"] = "307d75d2";
+											["units"] = {
+											};
+										};
+									};
+									["objects"] = {
+										["tapEdge"] = {
+											["options"] = {
+												["State"] = 0;
+											};
+											["params"] = {
+												["Threshold"] = 0.1;
+											};
+										};
+										["clock"] = {
+											["options"] = {
+												["Rational"] = 1;
+											};
+										};
+										["syncEdge"] = {
+											["options"] = {
+												["State"] = 0;
+											};
+											["params"] = {
+												["Threshold"] = 0.1;
+											};
+										};
+										["multiplier"] = {
+											["params"] = {
+												["Gain"] = 1.0;
+												["Bias"] = 0.0;
+											};
+										};
+										["width"] = {
+											["params"] = {
+												["Gain"] = 0.0;
+												["Bias"] = 0.09999999;
+											};
+										};
+										["divider"] = {
+											["params"] = {
+												["Gain"] = 1.0;
+												["Bias"] = 0.0;
+											};
+										};
+										["tap"] = {
+											["params"] = {
+												["Base Frequency"] = 3.633336;
+												["Base Period"] = 0.2752292;
+											};
+										};
+									};
+									["controlOrder"] = {
+										[1] = "tap";
+										[2] = "mult";
+										[3] = "div";
+										[4] = "sync";
+										[5] = "width";
+									};
+									["instanceKey"] = "de2556de";
+									["controls"] = {
+										["width"] = {
+											["gainEncoderState"] = "Coarse";
+										};
+										["div"] = {
+											["gainEncoderState"] = "Coarse";
+											["customizations"] = {
+												["biasMin"] = 0;
+											};
+										};
+										["mult"] = {
+											["gainEncoderState"] = "Coarse";
+											["customizations"] = {
+												["biasMin"] = 0;
+											};
+										};
+									};
+								};
+								[2] = {
+									["unitVersion"] = 1;
+									["loadInfo"] = {
+										["libraryName"] = "builtins";
+										["title"] = "Tap Tempo";
+										["keywords"] = "measure, source, timing";
+										["category"] = "Timing";
+										["moduleName"] = "Timing.TapTempoUnit";
+										["id"] = "Timing.TapTempoUnit";
+									};
+									["hasUserTitle"] = true;
+									["activeView"] = "expanded";
+									["bypass"] = false;
+									["firmwareVersion"] = shared[1];
+									["controlBranches"] = {
+									};
+									["title"] = "Length";
+									["branches"] = {
+										["divider"] = {
+											["selection"] = {
+												["view"] = "default";
+												["section"] = 0;
+												["spot"] = 1;
+											};
+											["firmwareVersion"] = shared[1];
+											["channels"] = {
+												["count"] = 1;
+												["inputs"] = {
+													[1] = {
+														["name"] = "Clocked Looper (length)";
+														["instanceKey"] = "848fe40d";
+														["type"] = "local";
+													};
+												};
+											};
+											["instanceKey"] = "c15e00e4";
+											["units"] = {
+											};
+										};
+									};
+									["objects"] = {
+										["tapEdge"] = {
+											["options"] = {
+												["State"] = 0;
+											};
+											["params"] = {
+												["Threshold"] = 0.1;
+											};
+										};
+										["clock"] = {
+											["options"] = {
+												["Rational"] = 1;
+											};
+										};
+										["syncEdge"] = {
+											["options"] = {
+												["State"] = 0;
+											};
+											["params"] = {
+												["Threshold"] = 0.1;
+											};
+										};
+										["multiplier"] = {
+											["params"] = {
+												["Gain"] = 0.0;
+												["Bias"] = 1.0;
+											};
+										};
+										["width"] = {
+											["params"] = {
+												["Gain"] = 0.0;
+												["Bias"] = 0.5;
+											};
+										};
+										["divider"] = {
+											["params"] = {
+												["Gain"] = 1.0;
+												["Bias"] = 0.0;
+											};
+										};
+										["tap"] = {
+											["params"] = {
+												["Base Frequency"] = 1.816737;
+												["Base Period"] = 0.5504375;
+											};
+										};
+									};
+									["controlOrder"] = {
+										[1] = "tap";
+										[2] = "mult";
+										[3] = "div";
+										[4] = "sync";
+										[5] = "width";
+									};
+									["instanceKey"] = "df6bbdd5";
+									["controls"] = {
+										["width"] = {
+											["gainEncoderState"] = "Coarse";
+										};
+										["div"] = {
+											["gainEncoderState"] = "Coarse";
+											["customizations"] = {
+												["biasMin"] = 0;
+											};
+										};
+										["mult"] = {
+											["gainEncoderState"] = "Coarse";
+										};
+									};
+								};
+							};
+						};
+						["wet"] = {
+							["selection"] = {
+								["view"] = "default";
+								["section"] = 0;
+								["spot"] = 1;
+							};
+							["firmwareVersion"] = shared[1];
+							["channels"] = {
+								["count"] = 1;
+								["inputs"] = {
+									[1] = {
+										["name"] = "Clocked Looper (wet)";
+										["instanceKey"] = "6a86b9c5";
+										["type"] = "local";
+									};
+								};
+							};
+							["instanceKey"] = "00ec5e18";
+							["units"] = {
+							};
+						};
+						["punch"] = {
+							["selection"] = {
+								["view"] = "expanded";
+								["section"] = 1;
+								["spot"] = 3;
+							};
+							["firmwareVersion"] = shared[1];
+							["channels"] = {
+								["count"] = 1;
+								["inputs"] = {
+									[1] = {
+										["name"] = "Clocked Looper (wet)";
+										["instanceKey"] = "6a86b9c5";
+										["type"] = "local";
+									};
+								};
+							};
+							["instanceKey"] = "413aa8e8";
+							["units"] = {
+								[1] = {
+									["unitVersion"] = 1;
+									["loadInfo"] = {
+										["libraryName"] = "builtins";
+										["title"] = "Bump Scanner";
+										["keywords"] = "utility, effect";
+										["category"] = "Mapping and Control";
+										["moduleName"] = "BumpMap";
+										["id"] = "BumpMap";
+									};
+									["hasUserTitle"] = true;
+									["activeView"] = "expanded";
+									["bypass"] = false;
+									["firmwareVersion"] = shared[1];
+									["controlBranches"] = {
+									};
+									["title"] = "Bump Scanner";
+									["branches"] = {
+									};
+									["objects"] = {
+										["width"] = {
+											["params"] = {
+												["Gain"] = 0.0;
+												["Bias"] = 0.0009999999;
+											};
+										};
+										["fade"] = {
+											["params"] = {
+												["Gain"] = 0.0;
+												["Bias"] = 0.0;
+											};
+										};
+										["center"] = {
+											["params"] = {
+												["Gain"] = 0.0;
+												["Bias"] = 0.0;
+											};
+										};
+										["height"] = {
+											["params"] = {
+												["Gain"] = 0.0;
+												["Bias"] = 1.0;
+											};
+										};
+									};
+									["controlOrder"] = {
+										[1] = "center";
+										[2] = "width";
+										[3] = "height";
+										[4] = "fade";
+									};
+									["instanceKey"] = "7540cd5f";
+									["controls"] = {
+										["width"] = {
+											["encoderState"] = "Fine";
+											["gainEncoderState"] = "Coarse";
+										};
+										["fade"] = {
+											["gainEncoderState"] = "Coarse";
+										};
+										["center"] = {
+											["gainEncoderState"] = "Coarse";
+										};
+										["height"] = {
+											["gainEncoderState"] = "Coarse";
+										};
+									};
+								};
+							};
+						};
+					};
+					["objects"] = {
+						["punch"] = {
+							["options"] = {
+								["Mode"] = 2;
+								["State"] = 1;
+							};
+							["params"] = {
+								["Threshold"] = 0.1;
+							};
+						};
+						["dub"] = {
+							["params"] = {
+								["Gain"] = 0.0;
+								["Bias"] = 1.0;
+							};
+						};
+						["start"] = {
+							["params"] = {
+								["Gain"] = 0.0;
+								["Bias"] = 0.0;
+							};
+						};
+						["engage"] = {
+							["options"] = {
+								["Mode"] = 1;
+								["State"] = 2;
+							};
+							["params"] = {
+								["Threshold"] = 0.1;
+							};
+						};
+						["head"] = {
+							["params"] = {
+								["Fade Time"] = 0.09999999;
+							};
+						};
+						["wet"] = {
+							["params"] = {
+								["Gain"] = 1.0;
+								["Bias"] = 0.0;
+							};
+						};
+						["reset"] = {
+							["options"] = {
+								["State"] = 0;
+							};
+							["params"] = {
+								["Threshold"] = 0.1;
+							};
+						};
+					};
+					["controlOrder"] = {
+						[1] = "reset";
+						[2] = "engage";
+						[3] = "punch";
+						[4] = "start";
+						[5] = "dub";
+						[6] = "wet";
+						[7] = "fade";
+					};
+					["instanceKey"] = "79010009";
+					["controls"] = {
+						["dub"] = {
+							["gainEncoderState"] = "Coarse";
+						};
+						["wave"] = {
+							["gain"] = 0;
+							["time"] = 9.996;
+						};
+						["wet"] = {
+							["gainEncoderState"] = "Coarse";
+						};
+						["start"] = {
+							["gainEncoderState"] = "Coarse";
+						};
+					};
+				};
+			};
+			["firmwareVersion"] = shared[1];
+			["instanceKey"] = "927e2bcc";
+		};
+	};
+	["hasUserTitle"] = true;
+	["activeView"] = "expanded";
+	["bypass"] = false;
+	["firmwareVersion"] = shared[1];
+	["controlBranches"] = {
+		["clock"] = {
+			["channels"] = {
+				["count"] = 1;
+				["inputs"] = {
+					[1] = "G1";
+				};
+			};
+			["units"] = {
+			};
+			["type"] = "Gate";
+			["id"] = "clock";
+			["selection"] = {
+				["view"] = "default";
+				["section"] = 0;
+				["spot"] = 1;
+			};
+			["firmwareVersion"] = shared[1];
+			["objects"] = {
+				[1] = {
+					["options"] = {
+						["State"] = 0;
+					};
+					["params"] = {
+						["Threshold"] = 0.1;
+					};
+				};
+			};
+			["instanceKey"] = "a993b0cf";
+			["control"] = {
+				["customizations"] = {
+					["description"] = "Clock";
+					["name"] = "clock";
+				};
+			};
+		};
+		["length"] = {
+			["channels"] = {
+				["count"] = 1;
+				["inputs"] = {
+				};
+			};
+			["units"] = {
+			};
+			["type"] = "GainBias";
+			["id"] = "length";
+			["selection"] = {
+				["view"] = "default";
+				["section"] = 0;
+				["spot"] = 0;
+			};
+			["firmwareVersion"] = shared[1];
+			["objects"] = {
+				[1] = {
+					["params"] = {
+						["Gain"] = 0.0;
+						["Bias"] = 8.0;
+					};
+				};
+			};
+			["instanceKey"] = "848fe40d";
+			["control"] = {
+				["gainEncoderState"] = "Coarse";
+				["customizations"] = {
+					["biasMin"] = 1;
+					["name"] = "length";
+					["biasSuperCoarseStep"] = 4;
+					["biasMax"] = 32;
+					["biasSuperFineStep"] = 0.01;
+					["biasCoarseStep"] = 1;
+					["description"] = "Loop length";
+					["biasFineStep"] = 0.25;
+				};
+			};
+		};
+		["div"] = {
+			["channels"] = {
+				["count"] = 1;
+				["inputs"] = {
+				};
+			};
+			["units"] = {
+			};
+			["type"] = "GainBias";
+			["id"] = "div";
+			["selection"] = {
+				["view"] = "default";
+				["section"] = 0;
+				["spot"] = 0;
+			};
+			["firmwareVersion"] = shared[1];
+			["objects"] = {
+				[1] = {
+					["params"] = {
+						["Gain"] = 0.0;
+						["Bias"] = 2.0;
+					};
+				};
+			};
+			["instanceKey"] = "36c90a1b";
+			["control"] = {
+				["gainEncoderState"] = "Coarse";
+				["customizations"] = {
+					["biasMin"] = 1;
+					["name"] = "div";
+					["biasSuperCoarseStep"] = 5;
+					["biasMax"] = 32;
+					["biasSuperFineStep"] = 0.25;
+					["biasCoarseStep"] = 1;
+					["description"] = "Clock div";
+					["biasFineStep"] = 0.25;
+				};
+			};
+		};
+		["wet"] = {
+			["channels"] = {
+				["count"] = 1;
+				["inputs"] = {
+					[1] = "D2";
+				};
+			};
+			["units"] = {
+			};
+			["type"] = "GainBias";
+			["id"] = "wet";
+			["selection"] = {
+				["view"] = "default";
+				["section"] = 0;
+				["spot"] = 1;
+			};
+			["firmwareVersion"] = shared[1];
+			["objects"] = {
+				[1] = {
+					["params"] = {
+						["Gain"] = 2.04;
+						["Bias"] = 0.0;
+					};
+				};
+			};
+			["instanceKey"] = "6a86b9c5";
+			["control"] = {
+				["gainEncoderState"] = "Fine";
+				["customizations"] = {
+					["biasMin"] = 0;
+					["name"] = "wet";
+					["description"] = "Dry/wet";
+					["biasMax"] = 1;
+				};
+			};
+		};
+		["mult"] = {
+			["channels"] = {
+				["count"] = 1;
+				["inputs"] = {
+				};
+			};
+			["units"] = {
+			};
+			["type"] = "GainBias";
+			["id"] = "mult";
+			["selection"] = {
+				["view"] = "default";
+				["section"] = 0;
+				["spot"] = 0;
+			};
+			["firmwareVersion"] = shared[1];
+			["objects"] = {
+				[1] = {
+					["params"] = {
+						["Gain"] = 0.0;
+						["Bias"] = 1.0;
+					};
+				};
+			};
+			["instanceKey"] = "03ad71cd";
+			["control"] = {
+				["gainEncoderState"] = "Coarse";
+				["customizations"] = {
+					["biasMax"] = 32;
+					["biasCoarseStep"] = 1;
+					["biasSuperCoarseStep"] = 5;
+					["name"] = "mult";
+					["biasSuperFineStep"] = 0.25;
+					["biasMin"] = 1;
+					["description"] = "Clock mult";
+					["biasFineStep"] = 0.25;
+				};
+			};
+		};
+	};
+	["title"] = "Clocked Looper";
+	["branches"] = {
+	};
+	["objects"] = {
+	};
+	["controlOrder"] = {
+		[1] = "clock";
+		[2] = "mult";
+		[3] = "div";
+		[4] = "length";
+		[5] = "wet";
+		[6] = "meter";
+	};
+	["instanceKey"] = "ed752370";
+	["controls"] = {
+	};
+}
+return obj1
