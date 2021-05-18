@@ -1,17 +1,9 @@
-# Override these defaults on the commandline:
 PKGNAME ?= FilterDelay
 PKGVERSION ?= 0.0.1
 ER301_SRC ?= ../../er-301/
 
 ASSETS = $(wildcard *.lua)
-
-#######################################################
-# Edits are generally not needed beyond this point.
-
 PACKAGE_FILE = $(PKGNAME)-$(PKGVERSION).pkg
-
-#######################################################
-# Rules
 
 all: $(PACKAGE_FILE)
 
