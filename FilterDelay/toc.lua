@@ -1,17 +1,12 @@
--- Return a table containing meta data that describes the package contents.
 return {
-  title = "Tutorial",
-  author = "O|D",
-  name = "tutorial",
-  units = {
-    {
-      -- Title and category control how this unit appears in the unit browser.
-      title = "FM Operator",
-      category = "Learning",
-      -- Which lua module contains the unit definition?
-      moduleName = "FMOperator",
-    },
-  }
+    title = "YRN1",
+    author = "YRN1",
+    name = "yrn1",
+    units = {{
+        -- Title and category control how this unit appears in the unit browser.
+        title = "Filter Delay",
+        category = "YRN1",
+        -- Which lua module contains the unit definition?
+        moduleName = "FilterDelay"
+    }}
 }
-
--- All packages must have this file!
