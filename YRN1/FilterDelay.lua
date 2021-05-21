@@ -52,14 +52,13 @@ end
 function FilterDelay:loadStereoGraph()
     local delay = self:addObject("delay", libcore.Delay(2))
 
-    local feedbackSumL = self:addObject("feedbackSumL", app.Sum())
-    local feedbackVCAL = self:addObject("feedbackVCAL", app.Multiply())
-    local feedbackSumR = self:addObject("feedbackSumR", app.Sum())
-    local feedbackVCAR = self:addObject("feedbackVCAR", app.Multiply())
-    local feedback = self:addObject("feedback", app.GainBias())
-    local feedbackRange = self:addObject("feedbackRange", app.MinMax())
-    local feedbackSnap = self:addObject("feedbackSnap", libcore.SnapToZero())
-    feedbackSnap:setThresholdInDecibels(-35.9)
+    local feedbackMixL = self:addObject("feedbackMixL", app.Sum())
+    local feedbackGainL = self:addObject("feedbackGainL", app.ConstantGain())
+    feedbackGainL:setClampInDecibels(-35.9)
+    local feedbackMixR = self:addObject("feedbackMixR", app.Sum())
+    local feedbackGainR = self:addObject("feedbackGainR", app.ConstantGain())
+    feedbackGainR:setClampInDecibels(-35.9)
+    local feedbackGainAdapter = self:addObject("feedbackGainAdapter", app.ParameterAdapter())
 
     local tap = self:addObject("tap", libcore.TapTempo())
     tap:setBaseTempo(120)
@@ -72,22 +71,20 @@ function FilterDelay:loadStereoGraph()
     tie(delay, "Left Delay", tap, "Derived Period")
     tie(delay, "Right Delay", tap, "Derived Period")
 
+    tie(feedbackGainL, "Gain", feedbackGainAdapter, "Out")
+    tie(feedbackGainR, "Gain", feedbackGainAdapter, "Out")
+
     connect(tapEdge, "Out", tap, "In")
 
-    connect(feedbackSnap, "Out", feedback, "In")
-    connect(feedback, "Out", feedbackRange, "In")
+    connect(self, "In1", feedbackMixL, "Left")
+    connect(feedbackMixL, "Out", delay, "Left In")
+    connect(delay, "Left Out", feedbackGainL, "In")
+    connect(feedbackGainL, "Out", feedbackMixL, "Right")
 
-    connect(self, "In1", feedbackSumL, "Left")
-    connect(feedbackSumL, "Out", delay, "Left In")
-    connect(delay, "Left Out", feedbackVCAL, "Left")
-    connect(feedback, "Out", feedbackVCAL, "Right")
-    connect(feedbackVCAL, "Out", feedbackSumL, "Right")
-
-    connect(self, "In2", feedbackSumR, "Left")
-    connect(feedbackSumR, "Out", delay, "Right In")
-    connect(delay, "Right Out", feedbackVCAR, "Left")
-    connect(feedback, "Out", feedbackVCAR, "Right")
-    connect(feedbackVCAR, "Out", feedbackSumR, "Right")
+    connect(self, "In2", feedbackMixR, "Left")
+    connect(feedbackMixR, "Out", delay, "Right In")
+    connect(delay, "Right Out", feedbackGainR, "In")
+    connect(feedbackGainR, "Out", feedbackMixR, "Right")
 
     connect(delay, "Left Out", self, "Out1")
     connect(delay, "Right Out", self, "Out2")
@@ -95,7 +92,7 @@ function FilterDelay:loadStereoGraph()
     self:addMonoBranch("clock", tapEdge, "In", tapEdge, "Out")
     self:addMonoBranch("multiplier", multiplier, "In", multiplier, "Out")
     self:addMonoBranch("divider", divider, "In", divider, "Out")
-    self:addMonoBranch("feedback", feedbackSnap, "In", feedbackSnap, "Out")
+    self:addMonoBranch("feedback", feedbackGainAdapter, "In", feedbackGainAdapter, "Out")
 end
 
 function FilterDelay:setMaxDelayTime(secs)
@@ -187,8 +184,8 @@ function FilterDelay:onLoadViews(objects, branches)
         button = "fdbk",
         description = "Feedback",
         branch = branches.feedback,
-        gainbias = objects.feedback,
-        range = objects.feedbackRange,
+        gainbias = objects.feedbackGainAdapter,
+        range = objects.feedbackGainAdapter,
         biasMap = Encoder.getMap("feedback"),
         biasUnits = app.unitDecibels
     }
