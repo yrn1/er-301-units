@@ -27,8 +27,8 @@ function FilterDelay:onLoadGraph(channelCount)
 end
 
 function FilterDelay:loadMonoGraph()
+    -- TODO mono version
     local delay = self:addObject("delay", libcore.Delay(1))
-
     local tap = self:addObject("tap", libcore.TapTempo())
     tap:setBaseTempo(120)
     local tapEdge = self:addObject("tapEdge", app.Comparator())
@@ -52,6 +52,15 @@ end
 function FilterDelay:loadStereoGraph()
     local delay = self:addObject("delay", libcore.Delay(2))
 
+    local feedbackSumL = self:addObject("feedbackSumL", app.Sum())
+    local feedbackVCAL = self:addObject("feedbackVCAL", app.Multiply())
+    local feedbackSumR = self:addObject("feedbackSumR", app.Sum())
+    local feedbackVCAR = self:addObject("feedbackVCAR", app.Multiply())
+    local feedback = self:addObject("feedback", app.GainBias())
+    local feedbackRange = self:addObject("feedbackRange", app.MinMax())
+    local feedbackSnap = self:addObject("feedbackSnap", libcore.SnapToZero())
+    feedbackSnap:setThresholdInDecibels(-35.9)
+
     local tap = self:addObject("tap", libcore.TapTempo())
     tap:setBaseTempo(120)
     local tapEdge = self:addObject("tapEdge", app.Comparator())
@@ -65,14 +74,28 @@ function FilterDelay:loadStereoGraph()
 
     connect(tapEdge, "Out", tap, "In")
 
-    connect(self, "In1", delay, "Left In")
-    connect(self, "In2", delay, "Right In")
+    connect(feedbackSnap, "Out", feedback, "In")
+    connect(feedback, "Out", feedbackRange, "In")
+
+    connect(self, "In1", feedbackSumL, "Left")
+    connect(feedbackSumL, "Out", delay, "Left In")
+    connect(delay, "Left Out", feedbackVCAL, "Left")
+    connect(feedback, "Out", feedbackVCAL, "Right")
+    connect(feedbackVCAL, "Out", feedbackSumL, "Right")
+
+    connect(self, "In2", feedbackSumR, "Left")
+    connect(feedbackSumR, "Out", delay, "Right In")
+    connect(delay, "Right Out", feedbackVCAR, "Left")
+    connect(feedback, "Out", feedbackVCAR, "Right")
+    connect(feedbackVCAR, "Out", feedbackSumR, "Right")
+
     connect(delay, "Left Out", self, "Out1")
     connect(delay, "Right Out", self, "Out2")
 
     self:addMonoBranch("clock", tapEdge, "In", tapEdge, "Out")
     self:addMonoBranch("multiplier", multiplier, "In", multiplier, "Out")
     self:addMonoBranch("divider", divider, "In", divider, "Out")
+    self:addMonoBranch("feedback", feedbackSnap, "In", feedbackSnap, "Out")
 end
 
 function FilterDelay:setMaxDelayTime(secs)
@@ -125,7 +148,7 @@ end
 function FilterDelay:onLoadViews(objects, branches)
     local controls = {}
     local views = {
-        expanded = {"clock", "mult", "div"},
+        expanded = {"clock", "mult", "div", "feedback"},
         collapsed = {}
     }
 
@@ -159,6 +182,17 @@ function FilterDelay:onLoadViews(objects, branches)
         initialBias = 1,
         biasPrecision = 0
     }
+
+    controls.feedback = GainBias {
+        button = "fdbk",
+        description = "Feedback",
+        branch = branches.feedback,
+        gainbias = objects.feedback,
+        range = objects.feedbackRange,
+        biasMap = Encoder.getMap("feedback"),
+        biasUnits = app.unitDecibels
+    }
+    controls.feedback:setTextBelow(-35.9, "-inf dB")
 
     self:setMaxDelayTime(1.0)
 
