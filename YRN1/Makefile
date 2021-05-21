@@ -1,4 +1,4 @@
-PKGNAME ?= FilterDelay
+PKGNAME ?= YRN1
 PKGVERSION ?= 0.0.1
 ER301_SRC ?= ../../er-301/
 
