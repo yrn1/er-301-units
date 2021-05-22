@@ -34,6 +34,13 @@ function FilterDelay:createControl(name, type)
     return control
 end
 
+local function feedbackMap()
+    local map = app.LinearDialMap(-36, 6)
+    map:setZero(-160)
+    map:setSteps(6, 1, 0.1, 0.01);
+    return map
+end
+
 function FilterDelay:loadMonoGraph()
     -- TODO mono version
     local delay = self:addObject("delay", libcore.Delay(1))
@@ -252,7 +259,7 @@ function FilterDelay:onLoadViews(objects, branches)
         branch = branches.feedback,
         gainbias = objects.feedbackGainAdapter,
         range = objects.feedbackGainAdapter,
-        biasMap = Encoder.getMap("feedback"),
+        biasMap = feedbackMap(),
         biasUnits = app.unitDecibels
     }
     controls.feedback:setTextBelow(-35.9, "-inf dB")
