@@ -26,6 +26,14 @@ function FilterDelay:onLoadGraph(channelCount)
     end
 end
 
+function FilterDelay:createControl(name, type)
+    local control = self:addObject(name, type)
+    local controlRange = self:addObject(name .. "Range", app.MinMax())
+    connect(control, "Out", controlRange, "In")
+    self:addMonoBranch(name, control, "In", control, "Out")
+    return control
+end
+
 function FilterDelay:loadMonoGraph()
     -- TODO mono version
     local delay = self:addObject("delay", libcore.Delay(1))
@@ -50,27 +58,25 @@ function FilterDelay:loadMonoGraph()
 end
 
 function FilterDelay:loadStereoGraph()
+    -- Stereo / general
     local delay = self:addObject("delay", libcore.Delay(2))
 
     local xfade = self:addObject("xfade", app.StereoCrossFade())
-    local fader = self:addObject("fader", app.GainBias())
-    local faderRange = self:addObject("faderRange", app.MinMax())
+    local fader = self:createControl("fader", app.GainBias())
+    connect(fader, "Out", xfade, "Fade")
 
-    local feedbackMixL = self:addObject("feedbackMixL", app.Sum())
-    local feedbackGainL = self:addObject("feedbackGainL", app.ConstantGain())
-    feedbackGainL:setClampInDecibels(-35.9)
-    local feedbackMixR = self:addObject("feedbackMixR", app.Sum())
-    local feedbackGainR = self:addObject("feedbackGainR", app.ConstantGain())
-    feedbackGainR:setClampInDecibels(-35.9)
+    local tap = self:addObject("tap", libcore.TapTempo())
+    tap:setBaseTempo(120)
+    local tapEdge = self:addObject("tapEdge", app.Comparator())
+    connect(tapEdge, "Out", tap, "In")
+    local multiplier = self:addObject("multiplier", app.ParameterAdapter())
+    tie(tap, "Multiplier", multiplier, "Out")
+    local divider = self:addObject("divider", app.ParameterAdapter())
+    tie(tap, "Divider", divider, "Out")
+
     local feedbackGainAdapter = self:addObject("feedbackGainAdapter", app.ParameterAdapter())
 
-    local limiterL = self:addObject("limiter", libcore.Limiter())
-    limiterL:setOptionValue("Type", 2)
-    local limiterR = self:addObject("limiter", libcore.Limiter())
-    limiterR:setOptionValue("Type", 2)
-
-    local eq = self:addObject("eq", app.GainBias())
-    local eqRange = self:addObject("eqRange", app.MinMax())
+    local eq = self:createControl("eq", app.GainBias())
 
     local eqRectifyHigh = self:addObject("eqRectifyHigh", libcore.Rectify())
     eqRectifyHigh:setOptionValue("Type", 2)
@@ -91,6 +97,19 @@ function FilterDelay:loadStereoGraph()
     connect(eq, "Out", eqRectifyLow, "In")
     connect(eqRectifyLow, "Out", eqLow, "In")
 
+    self:addMonoBranch("clock", tapEdge, "In", tapEdge, "Out")
+    self:addMonoBranch("multiplier", multiplier, "In", multiplier, "Out")
+    self:addMonoBranch("divider", divider, "In", divider, "Out")
+    self:addMonoBranch("feedback", feedbackGainAdapter, "In", feedbackGainAdapter, "Out")
+
+    -- Left
+    local feedbackMixL = self:addObject("feedbackMixL", app.Sum())
+    local feedbackGainL = self:addObject("feedbackGainL", app.ConstantGain())
+    feedbackGainL:setClampInDecibels(-35.9)
+
+    local limiterL = self:addObject("limiter", libcore.Limiter())
+    limiterL:setOptionValue("Type", 2)
+
     local eqL = self:addObject("eqL", libcore.Equalizer3())
     eqL:hardSet("Low Freq", 3000.0)
     eqL:hardSet("High Freq", 2000.0)
@@ -98,31 +117,9 @@ function FilterDelay:loadStereoGraph()
     connect(eqMid, "Out", eqL, "Mid Gain")
     connect(eqLow, "Out", eqL, "Low Gain")
 
-    local eqR = self:addObject("eqR", libcore.Equalizer3())
-    eqR:hardSet("Low Freq", 3000.0)
-    eqR:hardSet("High Freq", 2000.0)
-    connect(eqHigh, "Out", eqR, "High Gain")
-    connect(eqMid, "Out", eqR, "Mid Gain")
-    connect(eqLow, "Out", eqR, "Low Gain")
-
-    local tap = self:addObject("tap", libcore.TapTempo())
-    tap:setBaseTempo(120)
-    local tapEdge = self:addObject("tapEdge", app.Comparator())
-    local multiplier = self:addObject("multiplier", app.ParameterAdapter())
-    local divider = self:addObject("divider", app.ParameterAdapter())
-
     tie(feedbackGainL, "Gain", feedbackGainAdapter, "Out")
-    tie(feedbackGainR, "Gain", feedbackGainAdapter, "Out")
 
-    tie(tap, "Multiplier", multiplier, "Out")
-    tie(tap, "Divider", divider, "Out")
     tie(delay, "Left Delay", tap, "Derived Period")
-    tie(delay, "Right Delay", tap, "Derived Period")
-
-    connect(tapEdge, "Out", tap, "In")
-
-    connect(fader, "Out", xfade, "Fade")
-    connect(fader, "Out", faderRange, "In")
 
     connect(self, "In1", xfade, "Left B")
     connect(self, "In1", feedbackMixL, "Left")
@@ -134,6 +131,25 @@ function FilterDelay:loadStereoGraph()
     connect(delay, "Left Out", xfade, "Left A")
     connect(xfade, "Left Out", self, "Out1")
 
+    -- Right
+    local feedbackMixR = self:addObject("feedbackMixR", app.Sum())
+    local feedbackGainR = self:addObject("feedbackGainR", app.ConstantGain())
+    feedbackGainR:setClampInDecibels(-35.9)
+
+    local limiterR = self:addObject("limiter", libcore.Limiter())
+    limiterR:setOptionValue("Type", 2)
+
+    local eqR = self:addObject("eqR", libcore.Equalizer3())
+    eqR:hardSet("Low Freq", 3000.0)
+    eqR:hardSet("High Freq", 2000.0)
+    connect(eqHigh, "Out", eqR, "High Gain")
+    connect(eqMid, "Out", eqR, "Mid Gain")
+    connect(eqLow, "Out", eqR, "Low Gain")
+
+    tie(feedbackGainR, "Gain", feedbackGainAdapter, "Out")
+
+    tie(delay, "Right Delay", tap, "Derived Period")
+
     connect(self, "In2", xfade, "Right B")
     connect(self, "In2", feedbackMixR, "Left")
     connect(feedbackMixR, "Out", eqR, "In")
@@ -143,13 +159,6 @@ function FilterDelay:loadStereoGraph()
     connect(limiterR, "Out", feedbackMixR, "Right")
     connect(delay, "Right Out", xfade, "Right A")
     connect(xfade, "Right Out", self, "Out2")
-
-    self:addMonoBranch("clock", tapEdge, "In", tapEdge, "Out")
-    self:addMonoBranch("multiplier", multiplier, "In", multiplier, "Out")
-    self:addMonoBranch("divider", divider, "In", divider, "Out")
-    self:addMonoBranch("feedback", feedbackGainAdapter, "In", feedbackGainAdapter, "Out")
-    self:addMonoBranch("eq", eq, "In", eq, "Out")
-    self:addMonoBranch("wet", fader, "In", fader, "Out")
 end
 
 function FilterDelay:setMaxDelayTime(secs)
@@ -259,7 +268,7 @@ function FilterDelay:onLoadViews(objects, branches)
 
     controls.wet = GainBias {
         button = "wet",
-        branch = branches.wet,
+        branch = branches.fader,
         description = "Wet/Dry",
         gainbias = objects.fader,
         range = objects.faderRange,
