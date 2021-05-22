@@ -51,6 +51,9 @@ end
 
 function FilterDelay:loadStereoGraph()
     local delay = self:addObject("delay", libcore.Delay(2))
+    local xfade = self:addObject("xfade", app.StereoCrossFade())
+    local fader = self:addObject("fader", app.GainBias())
+    local faderRange = self:addObject("faderRange", app.MinMax())
 
     local feedbackMixL = self:addObject("feedbackMixL", app.Sum())
     local feedbackGainL = self:addObject("feedbackGainL", app.ConstantGain())
@@ -76,6 +79,9 @@ function FilterDelay:loadStereoGraph()
 
     connect(tapEdge, "Out", tap, "In")
 
+    connect(fader, "Out", xfade, "Fade")
+    connect(fader, "Out", faderRange, "In")
+
     connect(self, "In1", feedbackMixL, "Left")
     connect(feedbackMixL, "Out", delay, "Left In")
     connect(delay, "Left Out", feedbackGainL, "In")
@@ -86,13 +92,19 @@ function FilterDelay:loadStereoGraph()
     connect(delay, "Right Out", feedbackGainR, "In")
     connect(feedbackGainR, "Out", feedbackMixR, "Right")
 
-    connect(delay, "Left Out", self, "Out1")
-    connect(delay, "Right Out", self, "Out2")
+    connect(delay, "Left Out", xfade, "Left A")
+    connect(delay, "Right Out", xfade, "Right A")
+
+    connect(self, "In1", xfade, "Left B")
+    connect(self, "In2", xfade, "Right B")
+    connect(xfade, "Left Out", self, "Out1")
+    connect(xfade, "Right Out", self, "Out2")
 
     self:addMonoBranch("clock", tapEdge, "In", tapEdge, "Out")
     self:addMonoBranch("multiplier", multiplier, "In", multiplier, "Out")
     self:addMonoBranch("divider", divider, "In", divider, "Out")
     self:addMonoBranch("feedback", feedbackGainAdapter, "In", feedbackGainAdapter, "Out")
+    self:addMonoBranch("wet", fader, "In", fader, "Out")
 end
 
 function FilterDelay:setMaxDelayTime(secs)
@@ -145,7 +157,7 @@ end
 function FilterDelay:onLoadViews(objects, branches)
     local controls = {}
     local views = {
-        expanded = {"clock", "mult", "div", "feedback"},
+        expanded = {"clock", "mult", "div", "feedback", "wet"},
         collapsed = {}
     }
 
@@ -190,6 +202,15 @@ function FilterDelay:onLoadViews(objects, branches)
         biasUnits = app.unitDecibels
     }
     controls.feedback:setTextBelow(-35.9, "-inf dB")
+
+    controls.wet = GainBias {
+        button = "wet",
+        branch = branches.wet,
+        description = "Wet/Dry",
+        gainbias = objects.fader,
+        range = objects.faderRange,
+        biasMap = Encoder.getMap("unit")
+    }
 
     self:setMaxDelayTime(1.0)
 
