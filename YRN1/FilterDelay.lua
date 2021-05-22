@@ -40,18 +40,14 @@ function FilterDelay:createAdapterControl(name)
     return adapter
 end
 
-function FilterDelay:createTap()
+function FilterDelay:createTap(tapEdge)
     local tap = self:addObject("tap", libcore.TapTempo())
     tap:setBaseTempo(120)
-    local tapEdge = self:addObject("tapEdge", app.Comparator())
     connect(tapEdge, "Out", tap, "In")
     local multiplier = self:createAdapterControl("multiplier")
     tie(tap, "Multiplier", multiplier, "Out")
     local divider = self:createAdapterControl("divider")
     tie(tap, "Divider", divider, "Out")
-
-    self:addMonoBranch("clock", tapEdge, "In", tapEdge, "Out")
-
     return tap
 end
 
@@ -100,6 +96,12 @@ local function feedbackMap()
     return map
 end
 
+local function spreadMap()
+    local map = app.LinearDialMap(0, 0.1)
+    map:setSteps(0.01, 0.001, 0.0001, 0.00001)
+    return map
+end
+
 function FilterDelay:loadMonoGraph()
     -- TODO mono version
     local delay = self:addObject("delay", libcore.Delay(1))
@@ -131,7 +133,19 @@ function FilterDelay:loadStereoGraph()
     local fader = self:createControl("fader", app.GainBias())
     connect(fader, "Out", xfade, "Fade")
 
-    local tap = self:createTap()
+    local tapEdge = self:addObject("tapEdge", app.Comparator())
+    self:addMonoBranch("clock", tapEdge, "In", tapEdge, "Out")
+    local tap = self:createTap(tapEdge)
+
+    local noise = self:addObject("noise", libcore.WhiteNoise())
+    local hold = self:addObject("hold", libcore.TrackAndHold())
+    local comparator = self:addObject("comparator", app.Comparator())
+    comparator:setTriggerMode()
+    local spreadGainControl = self:createAdapterControl("spreadGainControl")
+    connect(tapEdge, "Out", comparator, "In")
+    connect(comparator, "Out", hold, "Track")
+    connect(noise, "Out", hold, "In")
+    tie(delay, "Spread", "*", hold, "Value", spreadGainControl, "Out")
 
     local feedbackGainAdapter = self:createAdapterControl("feedbackGainAdapter")
 
@@ -239,7 +253,7 @@ end
 function FilterDelay:onLoadViews(objects, branches)
     local controls = {}
     local views = {
-        expanded = {"clock", "mult", "div", "feedback", "eq", "wet"},
+        expanded = {"clock", "mult", "div", "feedback", "spread", "eq", "wet"},
         collapsed = {}
     }
 
@@ -284,6 +298,15 @@ function FilterDelay:onLoadViews(objects, branches)
         biasUnits = app.unitDecibels
     }
     controls.feedback:setTextBelow(-35.9, "-inf dB")
+
+    controls.spread = GainBias {
+        button = "spread",
+        description = "Spread",
+        branch = branches.spreadGainControl,
+        gainbias = objects.spreadGainControl,
+        range = objects.spreadGainControl,
+        biasMap = spreadMap()
+    }
 
     controls.eq = GainBias {
         button = "eq",
