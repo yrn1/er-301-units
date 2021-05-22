@@ -89,6 +89,21 @@ function FilterDelay:createEqLowControl(eqControl)
     return eqLow
 end
 
+function FilterDelay:createSpread(tap, tapEdge)
+    local clock = self:addObject("clock", libcore.ClockInSeconds())
+    tie(clock, "Period", tap, "Derived Period")
+    local noise = self:addObject("noise", libcore.WhiteNoise())
+    local hold = self:addObject("hold", libcore.TrackAndHold())
+    local comparator = self:addObject("comparator", app.Comparator())
+    comparator:setTriggerMode()
+    local spreadGainControl = self:createAdapterControl("spreadGainControl")
+    connect(tapEdge, "Out", clock, "Sync")
+    connect(clock, "Out", comparator, "In")
+    connect(comparator, "Out", hold, "Track")
+    connect(noise, "Out", hold, "In")
+    return hold
+end
+
 local function feedbackMap()
     local map = app.LinearDialMap(-36, 6)
     map:setZero(-160)
@@ -137,18 +152,9 @@ function FilterDelay:loadStereoGraph()
     self:addMonoBranch("clock", tapEdge, "In", tapEdge, "Out")
     local tap = self:createTap(tapEdge)
 
-    local clock = self:addObject("clock", libcore.ClockInSeconds())
-    tie(clock, "Period", tap, "Derived Period")
-    local noise = self:addObject("noise", libcore.WhiteNoise())
-    local hold = self:addObject("hold", libcore.TrackAndHold())
-    local comparator = self:addObject("comparator", app.Comparator())
-    comparator:setTriggerMode()
+    local spread = self:createSpread(tap, tapEdge)
     local spreadGainControl = self:createAdapterControl("spreadGainControl")
-    connect(tapEdge, "Out", clock, "Sync")
-    connect(clock, "Out", comparator, "In")
-    connect(comparator, "Out", hold, "Track")
-    connect(noise, "Out", hold, "In")
-    tie(delay, "Spread", "*", hold, "Value", spreadGainControl, "Out")
+    tie(delay, "Spread", "*", spread, "Value", spreadGainControl, "Out")
 
     local feedbackGainAdapter = self:createAdapterControl("feedbackGainAdapter")
 
