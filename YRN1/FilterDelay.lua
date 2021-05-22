@@ -51,6 +51,7 @@ end
 
 function FilterDelay:loadStereoGraph()
     local delay = self:addObject("delay", libcore.Delay(2))
+    
     local xfade = self:addObject("xfade", app.StereoCrossFade())
     local fader = self:addObject("fader", app.GainBias())
     local faderRange = self:addObject("faderRange", app.MinMax())
@@ -66,38 +67,36 @@ function FilterDelay:loadStereoGraph()
     local tap = self:addObject("tap", libcore.TapTempo())
     tap:setBaseTempo(120)
     local tapEdge = self:addObject("tapEdge", app.Comparator())
-
     local multiplier = self:addObject("multiplier", app.ParameterAdapter())
     local divider = self:addObject("divider", app.ParameterAdapter())
+
+    tie(feedbackGainL, "Gain", feedbackGainAdapter, "Out")
+    tie(feedbackGainR, "Gain", feedbackGainAdapter, "Out")
+
     tie(tap, "Multiplier", multiplier, "Out")
     tie(tap, "Divider", divider, "Out")
     tie(delay, "Left Delay", tap, "Derived Period")
     tie(delay, "Right Delay", tap, "Derived Period")
-
-    tie(feedbackGainL, "Gain", feedbackGainAdapter, "Out")
-    tie(feedbackGainR, "Gain", feedbackGainAdapter, "Out")
 
     connect(tapEdge, "Out", tap, "In")
 
     connect(fader, "Out", xfade, "Fade")
     connect(fader, "Out", faderRange, "In")
 
+    connect(self, "In1", xfade, "Left B")
     connect(self, "In1", feedbackMixL, "Left")
     connect(feedbackMixL, "Out", delay, "Left In")
     connect(delay, "Left Out", feedbackGainL, "In")
     connect(feedbackGainL, "Out", feedbackMixL, "Right")
+    connect(delay, "Left Out", xfade, "Left A")
+    connect(xfade, "Left Out", self, "Out1")
 
+    connect(self, "In2", xfade, "Right B")
     connect(self, "In2", feedbackMixR, "Left")
     connect(feedbackMixR, "Out", delay, "Right In")
     connect(delay, "Right Out", feedbackGainR, "In")
     connect(feedbackGainR, "Out", feedbackMixR, "Right")
-
-    connect(delay, "Left Out", xfade, "Left A")
     connect(delay, "Right Out", xfade, "Right A")
-
-    connect(self, "In1", xfade, "Left B")
-    connect(self, "In2", xfade, "Right B")
-    connect(xfade, "Left Out", self, "Out1")
     connect(xfade, "Right Out", self, "Out2")
 
     self:addMonoBranch("clock", tapEdge, "In", tapEdge, "Out")
