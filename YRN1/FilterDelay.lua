@@ -34,6 +34,23 @@ function FilterDelay:createControl(name, type)
     return control
 end
 
+function FilterDelay:createTap()
+    local tap = self:addObject("tap", libcore.TapTempo())
+    tap:setBaseTempo(120)
+    local tapEdge = self:addObject("tapEdge", app.Comparator())
+    connect(tapEdge, "Out", tap, "In")
+    local multiplier = self:addObject("multiplier", app.ParameterAdapter())
+    tie(tap, "Multiplier", multiplier, "Out")
+    local divider = self:addObject("divider", app.ParameterAdapter())
+    tie(tap, "Divider", divider, "Out")
+
+    self:addMonoBranch("clock", tapEdge, "In", tapEdge, "Out")
+    self:addMonoBranch("multiplier", multiplier, "In", multiplier, "Out")
+    self:addMonoBranch("divider", divider, "In", divider, "Out")
+
+    return tap
+end
+
 local function feedbackMap()
     local map = app.LinearDialMap(-36, 6)
     map:setZero(-160)
@@ -72,14 +89,7 @@ function FilterDelay:loadStereoGraph()
     local fader = self:createControl("fader", app.GainBias())
     connect(fader, "Out", xfade, "Fade")
 
-    local tap = self:addObject("tap", libcore.TapTempo())
-    tap:setBaseTempo(120)
-    local tapEdge = self:addObject("tapEdge", app.Comparator())
-    connect(tapEdge, "Out", tap, "In")
-    local multiplier = self:addObject("multiplier", app.ParameterAdapter())
-    tie(tap, "Multiplier", multiplier, "Out")
-    local divider = self:addObject("divider", app.ParameterAdapter())
-    tie(tap, "Divider", divider, "Out")
+    local tap = self:createTap()
 
     local feedbackGainAdapter = self:addObject("feedbackGainAdapter", app.ParameterAdapter())
 
@@ -104,9 +114,6 @@ function FilterDelay:loadStereoGraph()
     connect(eq, "Out", eqRectifyLow, "In")
     connect(eqRectifyLow, "Out", eqLow, "In")
 
-    self:addMonoBranch("clock", tapEdge, "In", tapEdge, "Out")
-    self:addMonoBranch("multiplier", multiplier, "In", multiplier, "Out")
-    self:addMonoBranch("divider", divider, "In", divider, "Out")
     self:addMonoBranch("feedback", feedbackGainAdapter, "In", feedbackGainAdapter, "Out")
 
     -- Left
