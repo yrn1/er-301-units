@@ -34,21 +34,63 @@ function FilterDelay:createControl(name, type)
     return control
 end
 
+function FilterDelay:createAdapterControl(name)
+    local adapter = self:addObject(name, app.ParameterAdapter())
+    self:addMonoBranch(name, adapter, "In", adapter, "Out")
+    return adapter
+end
+
 function FilterDelay:createTap()
     local tap = self:addObject("tap", libcore.TapTempo())
     tap:setBaseTempo(120)
     local tapEdge = self:addObject("tapEdge", app.Comparator())
     connect(tapEdge, "Out", tap, "In")
-    local multiplier = self:addObject("multiplier", app.ParameterAdapter())
+    local multiplier = self:createAdapterControl("multiplier")
     tie(tap, "Multiplier", multiplier, "Out")
-    local divider = self:addObject("divider", app.ParameterAdapter())
+    local divider = self:createAdapterControl("divider")
     tie(tap, "Divider", divider, "Out")
 
     self:addMonoBranch("clock", tapEdge, "In", tapEdge, "Out")
-    self:addMonoBranch("multiplier", multiplier, "In", multiplier, "Out")
-    self:addMonoBranch("divider", divider, "In", divider, "Out")
 
     return tap
+end
+
+function FilterDelay:createEq(name, high, mid, low)
+    local eq = self:addObject(name, libcore.Equalizer3())
+    eq:hardSet("Low Freq", 3000.0)
+    eq:hardSet("High Freq", 2000.0)
+    connect(high, "Out", eq, "High Gain")
+    connect(mid, "Out", eq, "Mid Gain")
+    connect(low, "Out", eq, "Low Gain")
+    return eq
+end
+
+function FilterDelay:createEqHighControl(eqControl)
+    local eqRectifyHigh = self:addObject("eqRectifyHigh", libcore.Rectify())
+    eqRectifyHigh:setOptionValue("Type", 2)
+    local eqHigh = self:addObject("eqHigh", app.GainBias())
+    eqHigh:hardSet("Gain", 1.0)
+    eqHigh:hardSet("Bias", 1.0)
+    connect(eqControl, "Out", eqRectifyHigh, "In")
+    connect(eqRectifyHigh, "Out", eqHigh, "In")
+    return eqHigh
+end
+
+function FilterDelay:createEqMidControl()
+    local eqMid = self:addObject("eqMid", app.Constant())
+    eqMid:hardSet("Value", 1.0)
+    return eqMid
+end
+
+function FilterDelay:createEqLowControl(eqControl)
+    local eqRectifyLow = self:addObject("eqRectifyLow", libcore.Rectify())
+    eqRectifyLow:setOptionValue("Type", 1)
+    local eqLow = self:addObject("eqLow", app.GainBias())
+    eqLow:hardSet("Gain", -1.0)
+    eqLow:hardSet("Bias", 1.0)
+    connect(eqControl, "Out", eqRectifyLow, "In")
+    connect(eqRectifyLow, "Out", eqLow, "In")
+    return eqLow
 end
 
 local function feedbackMap()
@@ -91,30 +133,12 @@ function FilterDelay:loadStereoGraph()
 
     local tap = self:createTap()
 
-    local feedbackGainAdapter = self:addObject("feedbackGainAdapter", app.ParameterAdapter())
+    local feedbackGainAdapter = self:createAdapterControl("feedbackGainAdapter")
 
     local eq = self:createControl("eq", app.GainBias())
-
-    local eqRectifyHigh = self:addObject("eqRectifyHigh", libcore.Rectify())
-    eqRectifyHigh:setOptionValue("Type", 2)
-    local eqHigh = self:addObject("eqHigh", app.GainBias())
-    eqHigh:hardSet("Gain", 1.0)
-    eqHigh:hardSet("Bias", 1.0)
-    connect(eq, "Out", eqRectifyHigh, "In")
-    connect(eqRectifyHigh, "Out", eqHigh, "In")
-
-    local eqMid = self:addObject("eqMid", app.Constant())
-    eqMid:hardSet("Value", 1.0)
-
-    local eqRectifyLow = self:addObject("eqRectifyLow", libcore.Rectify())
-    eqRectifyLow:setOptionValue("Type", 1)
-    local eqLow = self:addObject("eqLow", app.GainBias())
-    eqLow:hardSet("Gain", -1.0)
-    eqLow:hardSet("Bias", 1.0)
-    connect(eq, "Out", eqRectifyLow, "In")
-    connect(eqRectifyLow, "Out", eqLow, "In")
-
-    self:addMonoBranch("feedback", feedbackGainAdapter, "In", feedbackGainAdapter, "Out")
+    local eqHigh = self:createEqHighControl(eq)
+    local eqMid = self:createEqMidControl()
+    local eqLow = self:createEqLowControl(eq)
 
     -- Left
     local feedbackMixL = self:addObject("feedbackMixL", app.Sum())
@@ -124,12 +148,7 @@ function FilterDelay:loadStereoGraph()
     local limiterL = self:addObject("limiter", libcore.Limiter())
     limiterL:setOptionValue("Type", 2)
 
-    local eqL = self:addObject("eqL", libcore.Equalizer3())
-    eqL:hardSet("Low Freq", 3000.0)
-    eqL:hardSet("High Freq", 2000.0)
-    connect(eqHigh, "Out", eqL, "High Gain")
-    connect(eqMid, "Out", eqL, "Mid Gain")
-    connect(eqLow, "Out", eqL, "Low Gain")
+    local eqL = self:createEq("eqL", eqHigh, eqMid, eqLow)
 
     tie(feedbackGainL, "Gain", feedbackGainAdapter, "Out")
 
@@ -153,12 +172,7 @@ function FilterDelay:loadStereoGraph()
     local limiterR = self:addObject("limiter", libcore.Limiter())
     limiterR:setOptionValue("Type", 2)
 
-    local eqR = self:addObject("eqR", libcore.Equalizer3())
-    eqR:hardSet("Low Freq", 3000.0)
-    eqR:hardSet("High Freq", 2000.0)
-    connect(eqHigh, "Out", eqR, "High Gain")
-    connect(eqMid, "Out", eqR, "Mid Gain")
-    connect(eqLow, "Out", eqR, "Low Gain")
+    local eqR = self:createEq("eqR", eqHigh, eqMid, eqLow)
 
     tie(feedbackGainR, "Gain", feedbackGainAdapter, "Out")
 
@@ -263,7 +277,7 @@ function FilterDelay:onLoadViews(objects, branches)
     controls.feedback = GainBias {
         button = "fdbk",
         description = "Feedback",
-        branch = branches.feedback,
+        branch = branches.feedbackGainAdapter,
         gainbias = objects.feedbackGainAdapter,
         range = objects.feedbackGainAdapter,
         biasMap = feedbackMap(),
