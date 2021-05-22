@@ -19,10 +19,76 @@ function FilterDelay:init(args)
 end
 
 function FilterDelay:onLoadGraph(channelCount)
+    -- Stereo / General
+    local delay = self:addObject("delay", libcore.Delay(2))
+
+    local xfade = self:addObject("xfade", app.StereoCrossFade())
+    local fader = self:createControl("fader", app.GainBias())
+    connect(fader, "Out", xfade, "Fade")
+
+    local tapEdge = self:addObject("tapEdge", app.Comparator())
+    self:addMonoBranch("clock", tapEdge, "In", tapEdge, "Out")
+    local tap = self:createTap(tapEdge)
+
+    local feedbackGainAdapter = self:createAdapterControl("feedbackGainAdapter")
+
+    local eq = self:createControl("eq", app.GainBias())
+    local eqHigh = self:createEqHighControl(eq)
+    local eqMid = self:createEqMidControl()
+    local eqLow = self:createEqLowControl(eq)
+
+    -- Left
+    local feedbackMixL = self:addObject("feedbackMixL", app.Sum())
+    local feedbackGainL = self:addObject("feedbackGainL", app.ConstantGain())
+    feedbackGainL:setClampInDecibels(-35.9)
+
+    local limiterL = self:addObject("limiter", libcore.Limiter())
+    limiterL:setOptionValue("Type", 2)
+
+    local eqL = self:createEq("eqL", eqHigh, eqMid, eqLow)
+
+    tie(feedbackGainL, "Gain", feedbackGainAdapter, "Out")
+
+    tie(delay, "Left Delay", tap, "Derived Period")
+
+    connect(self, "In1", xfade, "Left B")
+    connect(self, "In1", feedbackMixL, "Left")
+    connect(feedbackMixL, "Out", eqL, "In")
+    connect(eqL, "Out", delay, "Left In")
+    connect(delay, "Left Out", feedbackGainL, "In")
+    connect(feedbackGainL, "Out", limiterL, "In")
+    connect(limiterL, "Out", feedbackMixL, "Right")
+    connect(delay, "Left Out", xfade, "Left A")
+    connect(xfade, "Left Out", self, "Out1")
+
+    -- Right
     if channelCount == 2 then
-        self:loadStereoGraph()
-    else
-        self:loadMonoGraph()
+        local spread = self:createSpread(tap, tapEdge)
+        local spreadGainControl = self:createAdapterControl("spreadGainControl")
+        tie(delay, "Spread", "*", spread, "Value", spreadGainControl, "Out")
+
+        local feedbackMixR = self:addObject("feedbackMixR", app.Sum())
+        local feedbackGainR = self:addObject("feedbackGainR", app.ConstantGain())
+        feedbackGainR:setClampInDecibels(-35.9)
+
+        local limiterR = self:addObject("limiter", libcore.Limiter())
+        limiterR:setOptionValue("Type", 2)
+
+        local eqR = self:createEq("eqR", eqHigh, eqMid, eqLow)
+
+        tie(feedbackGainR, "Gain", feedbackGainAdapter, "Out")
+
+        tie(delay, "Right Delay", tap, "Derived Period")
+
+        connect(self, "In2", xfade, "Right B")
+        connect(self, "In2", feedbackMixR, "Left")
+        connect(feedbackMixR, "Out", eqR, "In")
+        connect(eqR, "Out", delay, "Right In")
+        connect(delay, "Right Out", feedbackGainR, "In")
+        connect(feedbackGainR, "Out", limiterR, "In")
+        connect(limiterR, "Out", feedbackMixR, "Right")
+        connect(delay, "Right Out", xfade, "Right A")
+        connect(xfade, "Right Out", self, "Out2")
     end
 end
 
@@ -117,101 +183,6 @@ local function spreadMap()
     return map
 end
 
-function FilterDelay:loadMonoGraph()
-    -- TODO mono version
-    local delay = self:addObject("delay", libcore.Delay(1))
-    local tap = self:addObject("tap", libcore.TapTempo())
-    tap:setBaseTempo(120)
-    local tapEdge = self:addObject("tapEdge", app.Comparator())
-
-    local multiplier = self:addObject("multiplier", app.ParameterAdapter())
-    local divider = self:addObject("divider", app.ParameterAdapter())
-    tie(tap, "Multiplier", multiplier, "Out")
-    tie(tap, "Divider", divider, "Out")
-    tie(delay, "Left Delay", tap, "Derived Period")
-
-    connect(tapEdge, "Out", tap, "In")
-
-    connect(self, "In1", delay, "Left In")
-    connect(delay, "Left Out", self, "Out1")
-
-    self:addMonoBranch("clock", tapEdge, "In", tapEdge, "Out")
-    self:addMonoBranch("multiplier", multiplier, "In", multiplier, "Out")
-    self:addMonoBranch("divider", divider, "In", divider, "Out")
-end
-
-function FilterDelay:loadStereoGraph()
-    -- Stereo / general
-    local delay = self:addObject("delay", libcore.Delay(2))
-
-    local xfade = self:addObject("xfade", app.StereoCrossFade())
-    local fader = self:createControl("fader", app.GainBias())
-    connect(fader, "Out", xfade, "Fade")
-
-    local tapEdge = self:addObject("tapEdge", app.Comparator())
-    self:addMonoBranch("clock", tapEdge, "In", tapEdge, "Out")
-    local tap = self:createTap(tapEdge)
-
-    local spread = self:createSpread(tap, tapEdge)
-    local spreadGainControl = self:createAdapterControl("spreadGainControl")
-    tie(delay, "Spread", "*", spread, "Value", spreadGainControl, "Out")
-
-    local feedbackGainAdapter = self:createAdapterControl("feedbackGainAdapter")
-
-    local eq = self:createControl("eq", app.GainBias())
-    local eqHigh = self:createEqHighControl(eq)
-    local eqMid = self:createEqMidControl()
-    local eqLow = self:createEqLowControl(eq)
-
-    -- Left
-    local feedbackMixL = self:addObject("feedbackMixL", app.Sum())
-    local feedbackGainL = self:addObject("feedbackGainL", app.ConstantGain())
-    feedbackGainL:setClampInDecibels(-35.9)
-
-    local limiterL = self:addObject("limiter", libcore.Limiter())
-    limiterL:setOptionValue("Type", 2)
-
-    local eqL = self:createEq("eqL", eqHigh, eqMid, eqLow)
-
-    tie(feedbackGainL, "Gain", feedbackGainAdapter, "Out")
-
-    tie(delay, "Left Delay", tap, "Derived Period")
-
-    connect(self, "In1", xfade, "Left B")
-    connect(self, "In1", feedbackMixL, "Left")
-    connect(feedbackMixL, "Out", eqL, "In")
-    connect(eqL, "Out", delay, "Left In")
-    connect(delay, "Left Out", feedbackGainL, "In")
-    connect(feedbackGainL, "Out", limiterL, "In")
-    connect(limiterL, "Out", feedbackMixL, "Right")
-    connect(delay, "Left Out", xfade, "Left A")
-    connect(xfade, "Left Out", self, "Out1")
-
-    -- Right
-    local feedbackMixR = self:addObject("feedbackMixR", app.Sum())
-    local feedbackGainR = self:addObject("feedbackGainR", app.ConstantGain())
-    feedbackGainR:setClampInDecibels(-35.9)
-
-    local limiterR = self:addObject("limiter", libcore.Limiter())
-    limiterR:setOptionValue("Type", 2)
-
-    local eqR = self:createEq("eqR", eqHigh, eqMid, eqLow)
-
-    tie(feedbackGainR, "Gain", feedbackGainAdapter, "Out")
-
-    tie(delay, "Right Delay", tap, "Derived Period")
-
-    connect(self, "In2", xfade, "Right B")
-    connect(self, "In2", feedbackMixR, "Left")
-    connect(feedbackMixR, "Out", eqR, "In")
-    connect(eqR, "Out", delay, "Right In")
-    connect(delay, "Right Out", feedbackGainR, "In")
-    connect(feedbackGainR, "Out", limiterR, "In")
-    connect(limiterR, "Out", feedbackMixR, "Right")
-    connect(delay, "Right Out", xfade, "Right A")
-    connect(xfade, "Right Out", self, "Out2")
-end
-
 function FilterDelay:setMaxDelayTime(secs)
     local requested = math.floor(secs + 0.5)
     self.objects.delay:allocateTimeUpTo(requested)
@@ -262,9 +233,22 @@ end
 function FilterDelay:onLoadViews(objects, branches)
     local controls = {}
     local views = {
-        expanded = {"clock", "mult", "div", "feedback", "spread", "eq", "wet"},
         collapsed = {}
     }
+
+    if self.channelcount == 2 then
+        views.expanded = {"clock", "mult", "div", "feedback", "spread", "eq", "wet"}
+        controls.spread = GainBias {
+            button = "spread",
+            description = "Spread",
+            branch = branches.spreadGainControl,
+            gainbias = objects.spreadGainControl,
+            range = objects.spreadGainControl,
+            biasMap = spreadMap()
+        }
+    else
+        views.expanded = {"clock", "mult", "div", "feedback", "eq", "wet"}
+    end
 
     controls.clock = Gate {
         button = "clock",
@@ -307,15 +291,6 @@ function FilterDelay:onLoadViews(objects, branches)
         biasUnits = app.unitDecibels
     }
     controls.feedback:setTextBelow(-35.9, "-inf dB")
-
-    controls.spread = GainBias {
-        button = "spread",
-        description = "Spread",
-        branch = branches.spreadGainControl,
-        gainbias = objects.spreadGainControl,
-        range = objects.spreadGainControl,
-        biasMap = spreadMap()
-    }
 
     controls.eq = GainBias {
         button = "eq",
