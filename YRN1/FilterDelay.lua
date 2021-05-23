@@ -1,6 +1,4 @@
--- with patched: 88% - 89%
--- without: 69%
--- with this: 78%-79%
+-- Takes 9-10% CPU in stereo
 local Class = require "Base.Class"
 local Unit = require "Unit"
 local Encoder = require "Encoder"
