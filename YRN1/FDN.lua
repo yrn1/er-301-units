@@ -21,6 +21,10 @@
 -- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 -- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 --
+-- This FDN reverb is based on a paper by
+-- TOM ERBE - UC SAN DIEGO: REVERB TOPOLOGIES AND DESIGN
+-- http://tre.ucsd.edu/wordpress/wp-content/uploads/2018/10/reverbtopo.pdf
+--
 local Class = require "Base.Class"
 local Unit = require "Unit"
 local Encoder = require "Encoder"
@@ -121,8 +125,13 @@ function FDN:onLoadGraph(channelCount)
     local outMixL = self:addObject("outMixL", app.Sum())
     local outMixR = self:addObject("outMixR", app.Sum())
 
-    connect(self, "In1", inLevelL, "In")
-    connect(self, "In2", inLevelR, "In")
+    if channelCount == 2 then
+        connect(self, "In1", inLevelL, "In")
+        connect(self, "In2", inLevelR, "In")
+    else
+        connect(self, "In1", inLevelL, "In")
+        connect(self, "In1", inLevelR, "In")
+    end
     connect(inLevelL, "Out", eq1Mix, "Left")
     connect(inLevelR, "Out", eq2Mix, "Left")
     connect(eq1Mix, "Out", eq1, "In")
@@ -169,11 +178,15 @@ function FDN:onLoadGraph(channelCount)
     connect(fdnMixL, "Out", outMixL, "Right")
     connect(fdnMixR, "Out", outMixR, "Right")
 
-    connect(self, "In1", outMixL, "Left")
-    connect(self, "In2", outMixR, "Left")
-
-    connect(outMixL, "Out", self, "Out1")
-    connect(outMixR, "Out", self, "Out2")
+    if channelCount == 2 then
+        connect(self, "In1", outMixL, "Left")
+        connect(self, "In2", outMixR, "Left")
+        connect(outMixL, "Out", self, "Out1")
+        connect(outMixR, "Out", self, "Out2")
+    else
+        connect(self, "In1", outMixL, "Left")
+        connect(outMixL, "Out", self, "Out1")
+    end
 end
 
 function FDN:createControl(name, type)
