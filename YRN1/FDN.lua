@@ -25,6 +25,7 @@
 -- TOM ERBE - UC SAN DIEGO: REVERB TOPOLOGIES AND DESIGN
 -- http://tre.ucsd.edu/wordpress/wp-content/uploads/2018/10/reverbtopo.pdf
 --
+-- Takes 20% CPU in stereo
 local Class = require "Base.Class"
 local Unit = require "Unit"
 local Encoder = require "Encoder"
