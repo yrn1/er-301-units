@@ -33,10 +33,10 @@ function FilterDelay:onLoadGraph(channelCount)
 
     local feedbackGainAdapter = self:createAdapterControl("feedbackGainAdapter")
 
-    local eq = self:createControl("eq", app.GainBias())
-    local eqHigh = self:createEqHighControl(eq)
+    local tone = self:createControl("tone", app.GainBias())
+    local eqHigh = self:createEqHighControl(tone)
     local eqMid = self:createEqMidControl()
-    local eqLow = self:createEqLowControl(eq)
+    local eqLow = self:createEqLowControl(tone)
 
     -- Left
     local feedbackMixL = self:addObject("feedbackMixL", app.Sum())
@@ -133,13 +133,13 @@ function FilterDelay:createEq(name, high, mid, low)
     return eq
 end
 
-function FilterDelay:createEqHighControl(eqControl)
+function FilterDelay:createEqHighControl(toneControl)
     local eqRectifyHigh = self:addObject("eqRectifyHigh", libcore.Rectify())
     eqRectifyHigh:setOptionValue("Type", 2)
     local eqHigh = self:addObject("eqHigh", app.GainBias())
     eqHigh:hardSet("Gain", 1.0)
     eqHigh:hardSet("Bias", 1.0)
-    connect(eqControl, "Out", eqRectifyHigh, "In")
+    connect(toneControl, "Out", eqRectifyHigh, "In")
     connect(eqRectifyHigh, "Out", eqHigh, "In")
     return eqHigh
 end
@@ -150,13 +150,13 @@ function FilterDelay:createEqMidControl()
     return eqMid
 end
 
-function FilterDelay:createEqLowControl(eqControl)
+function FilterDelay:createEqLowControl(toneControl)
     local eqRectifyLow = self:addObject("eqRectifyLow", libcore.Rectify())
     eqRectifyLow:setOptionValue("Type", 1)
     local eqLow = self:addObject("eqLow", app.GainBias())
     eqLow:hardSet("Gain", -1.0)
     eqLow:hardSet("Bias", 1.0)
-    connect(eqControl, "Out", eqRectifyLow, "In")
+    connect(toneControl, "Out", eqRectifyLow, "In")
     connect(eqRectifyLow, "Out", eqLow, "In")
     return eqLow
 end
@@ -243,7 +243,7 @@ function FilterDelay:onLoadViews(objects, branches)
     }
 
     if self.channelCount == 2 then
-        views.expanded = {"clock", "mult", "div", "feedback", "spread", "eq", "wet"}
+        views.expanded = {"clock", "mult", "div", "feedback", "spread", "tone", "wet"}
         controls.spread = GainBias {
             button = "spread",
             description = "Spread",
@@ -253,7 +253,7 @@ function FilterDelay:onLoadViews(objects, branches)
             biasMap = spreadMap()
         }
     else
-        views.expanded = {"clock", "mult", "div", "feedback", "eq", "wet"}
+        views.expanded = {"clock", "mult", "div", "feedback", "tone", "wet"}
     end
 
     controls.clock = Gate {
@@ -298,12 +298,12 @@ function FilterDelay:onLoadViews(objects, branches)
     }
     controls.feedback:setTextBelow(-35.9, "-inf dB")
 
-    controls.eq = GainBias {
-        button = "eq",
-        description = "EQ",
-        branch = branches.eq,
-        gainbias = objects.eq,
-        range = objects.eqRange,
+    controls.tone = GainBias {
+        button = "tone",
+        description = "Tone",
+        branch = branches.tone,
+        gainbias = objects.tone,
+        range = objects.toneRange,
         biasMap = Encoder.getMap("[-1,1]")
     }
 
