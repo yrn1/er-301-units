@@ -22,7 +22,7 @@
 -- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 --
 return {
-    title = "YRN1",
+    title = "Filter Delays",
     author = "YRN1",
     name = "yrn1",
     units = {{
@@ -33,9 +33,5 @@ return {
         title = "Feedback Delay Network",
         category = "YRN1",
         moduleName = "FDN"
-    }, {
-        title = "Pass Through",
-        category = "YRN1",
-        moduleName = "Thru"
     }}
 }
