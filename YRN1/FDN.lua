@@ -308,7 +308,7 @@ function FDN:onLoadViews(objects, branches)
         gainbias = objects.delay,
         range = objects.delayRange,
         biasMap = timeMap(allocated, 100),
-        initialBias = 0.1,
+        initialBias = 0.3,
         biasUnits = app.unitSecs
     }
 
@@ -319,7 +319,8 @@ function FDN:onLoadViews(objects, branches)
         gainbias = objects.feedbackAdapter,
         range = objects.feedbackAdapter,
         biasMap = Encoder.getMap("feedback"),
-        biasUnits = app.unitDecibels
+        biasUnits = app.unitDecibels,
+        initialBias = 0.95
     }
     controls.feedback:setTextBelow(-35.9, "-inf dB")
 
@@ -338,7 +339,8 @@ function FDN:onLoadViews(objects, branches)
         branch = branches.modulation,
         gainbias = objects.modulation,
         range = objects.modulation,
-        biasMap = Encoder.getMap("[0,1]")
+        biasMap = Encoder.getMap("[0,1]"),
+        initialBias = 0.02
     }
 
     controls.level = GainBias {
@@ -347,7 +349,8 @@ function FDN:onLoadViews(objects, branches)
         branch = branches.levelAdapter,
         gainbias = objects.levelAdapter,
         range = objects.levelAdapter,
-        biasMap = Encoder.getMap("unit")
+        biasMap = Encoder.getMap("unit"),
+        initialBias = 0.8
     }
 
     return controls, views
