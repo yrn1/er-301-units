@@ -25,8 +25,18 @@ function FDN:onLoadGraph(channelCount)
     local inLevelR = self:addObject("inLevelR", app.ConstantGain())
     tie(inLevelR, "Gain", levelAdapter, "Out")
 
-    local delay1Mix = self:addObject("delay1Mix", app.Sum())
-    local delay2Mix = self:addObject("delay2Mix", app.Sum())
+    local eq1Mix = self:addObject("eq1Mix", app.Sum())
+    local eq2Mix = self:addObject("eq2Mix", app.Sum())
+
+    local tone = self:createControl("tone", app.GainBias())
+    local eqHigh = self:createEqHighControl(tone)
+    local eqMid = self:createEqMidControl()
+    local eqLow = self:createEqLowControl(tone)
+
+    local eq1 = self:createEq("eq1", eqHigh, eqMid, eqLow)
+    local eq2 = self:createEq("eq2", eqHigh, eqMid, eqLow)
+    local eq3 = self:createEq("eq3", eqHigh, eqMid, eqLow)
+    local eq4 = self:createEq("eq4", eqHigh, eqMid, eqLow)
 
     local delay1 = self:addObject("delay1", libcore.DopplerDelay(2.0))
     local delay2 = self:addObject("delay2", libcore.DopplerDelay(2.0))
@@ -90,10 +100,15 @@ function FDN:onLoadGraph(channelCount)
 
     connect(self, "In1", inLevelL, "In")
     connect(self, "In2", inLevelR, "In")
-    connect(inLevelL, "Out", delay1Mix, "Left")
-    connect(inLevelR, "Out", delay2Mix, "Left")
-    connect(delay1Mix, "Out", delay1, "In")
-    connect(delay2Mix, "Out", delay2, "In")
+    connect(inLevelL, "Out", eq1Mix, "Left")
+    connect(inLevelR, "Out", eq2Mix, "Left")
+    connect(eq1Mix, "Out", eq1, "In")
+    connect(eq2Mix, "Out", eq2, "In")
+
+    connect(eq1, "Out", delay1, "In")
+    connect(eq2, "Out", delay2, "In")
+    connect(eq3, "Out", delay3, "In")
+    connect(eq4, "Out", delay4, "In")
 
     connect(delay1, "Out", dif11, "Left")
     connect(delay1, "Out", sum12, "Left")
@@ -118,10 +133,10 @@ function FDN:onLoadGraph(channelCount)
     connect(dif23, "Out", feedback3, "In")
     connect(sum24, "Out", feedback4, "In")
 
-    connect(feedback1, "Out", delay1Mix, "Right")
-    connect(feedback2, "Out", delay3, "In")
-    connect(feedback3, "Out", delay2Mix, "Right")
-    connect(feedback4, "Out", delay4, "In")
+    connect(feedback1, "Out", eq1Mix, "Right")
+    connect(feedback2, "Out", eq3, "In")
+    connect(feedback3, "Out", eq2Mix, "Right")
+    connect(feedback4, "Out", eq4, "In")
 
     connect(feedback1, "Out", fdnMixL, "Left")
     connect(feedback2, "Out", fdnMixR, "Left")
@@ -166,6 +181,44 @@ connect(negation, "Out", sum, "Right")
 return negation
 end
 
+function FDN:createEq(name, high, mid, low)
+    local eq = self:addObject(name, libcore.Equalizer3())
+    eq:hardSet("Low Freq", 3000.0)
+    eq:hardSet("High Freq", 2000.0)
+    connect(high, "Out", eq, "High Gain")
+    connect(mid, "Out", eq, "Mid Gain")
+    connect(low, "Out", eq, "Low Gain")
+    return eq
+end
+
+function FDN:createEqHighControl(toneControl)
+    local eqRectifyHigh = self:addObject("eqRectifyHigh", libcore.Rectify())
+    eqRectifyHigh:setOptionValue("Type", 2)
+    local eqHigh = self:addObject("eqHigh", app.GainBias())
+    eqHigh:hardSet("Gain", 1.0)
+    eqHigh:hardSet("Bias", 1.0)
+    connect(toneControl, "Out", eqRectifyHigh, "In")
+    connect(eqRectifyHigh, "Out", eqHigh, "In")
+    return eqHigh
+end
+
+function FDN:createEqMidControl()
+    local eqMid = self:addObject("eqMid", app.Constant())
+    eqMid:hardSet("Value", 1.0)
+    return eqMid
+end
+
+function FDN:createEqLowControl(toneControl)
+    local eqRectifyLow = self:addObject("eqRectifyLow", libcore.Rectify())
+    eqRectifyLow:setOptionValue("Type", 1)
+    local eqLow = self:addObject("eqLow", app.GainBias())
+    eqLow:hardSet("Gain", -1.0)
+    eqLow:hardSet("Bias", 1.0)
+    connect(toneControl, "Out", eqRectifyLow, "In")
+    connect(eqRectifyLow, "Out", eqLow, "In")
+    return eqLow
+end
+
 local function timeMap(max, n)
     local map = app.LinearDialMap(0, max)
     map:setCoarseRadix(n)
@@ -175,7 +228,7 @@ end
 function FDN:onLoadViews(objects, branches)
     local controls = {}
     local views = {
-        expanded = {"delay", "feedback", "level"},
+        expanded = {"delay", "feedback", "tone", "level"},
         collapsed = {}
     }
 
@@ -207,6 +260,15 @@ function FDN:onLoadViews(objects, branches)
         biasUnits = app.unitDecibels
     }
     controls.feedback:setTextBelow(-35.9, "-inf dB")
+
+    controls.tone = GainBias {
+        button = "tone",
+        description = "Tone",
+        branch = branches.tone,
+        gainbias = objects.tone,
+        range = objects.toneRange,
+        biasMap = Encoder.getMap("[-1,1]")
+    }
 
     controls.level = GainBias {
         button = "level",
