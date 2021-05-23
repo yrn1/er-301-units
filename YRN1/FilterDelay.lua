@@ -1,3 +1,6 @@
+-- with patched: 88% - 89%
+-- without: 69%
+-- with this: 78%-79%
 local Class = require "Base.Class"
 local Unit = require "Unit"
 local Encoder = require "Encoder"
@@ -55,10 +58,15 @@ function FilterDelay:onLoadGraph(channelCount)
     connect(self, "In1", feedbackMixL, "Left")
     connect(feedbackMixL, "Out", eqL, "In")
     connect(eqL, "Out", delay, "Left In")
-    connect(delay, "Left Out", feedbackGainL, "In")
+    if channelCount == 2 then
+        connect(delay, "Right Out", feedbackGainL, "In")
+        connect(delay, "Right Out", xfade, "Left A")
+    else
+        connect(delay, "Left Out", feedbackGainL, "In")
+        connect(delay, "Left Out", xfade, "Left A")
+    end
     connect(feedbackGainL, "Out", limiterL, "In")
     connect(limiterL, "Out", feedbackMixL, "Right")
-    connect(delay, "Left Out", xfade, "Left A")
     connect(xfade, "Left Out", self, "Out1")
 
     -- Right
@@ -84,10 +92,10 @@ function FilterDelay:onLoadGraph(channelCount)
         connect(self, "In2", feedbackMixR, "Left")
         connect(feedbackMixR, "Out", eqR, "In")
         connect(eqR, "Out", delay, "Right In")
-        connect(delay, "Right Out", feedbackGainR, "In")
+        connect(delay, "Left Out", feedbackGainR, "In")
+        connect(delay, "Left Out", xfade, "Right A")
         connect(feedbackGainR, "Out", limiterR, "In")
         connect(limiterR, "Out", feedbackMixR, "Right")
-        connect(delay, "Right Out", xfade, "Right A")
         connect(xfade, "Right Out", self, "Out2")
     end
 end
