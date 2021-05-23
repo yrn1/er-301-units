@@ -9,9 +9,9 @@ return {
             moduleName = "FilterDelay"
         },
         {
-            title = "Tie Function Bug",
+            title = "Pass Through",
             category = "YRN1",
-            moduleName = "TieBug"
+            moduleName = "Thru"
         },
     }
 }

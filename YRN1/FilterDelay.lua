@@ -236,7 +236,7 @@ function FilterDelay:onLoadViews(objects, branches)
         collapsed = {}
     }
 
-    if self.channelcount == 2 then
+    if self.channelCount == 2 then
         views.expanded = {"clock", "mult", "div", "feedback", "spread", "eq", "wet"}
         controls.spread = GainBias {
             button = "spread",
