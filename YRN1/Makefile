@@ -1,5 +1,5 @@
 PKGNAME ?= YRN1
-PKGVERSION ?= 0.0.1
+PKGVERSION ?= 0.6.01
 ER301_SRC ?= ../../er-301/
 
 ASSETS = $(wildcard *.lua)
