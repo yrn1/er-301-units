@@ -24,14 +24,17 @@
 return {
     title = "Filter Delays",
     author = "YRN1",
-    name = "yrn1",
+    name = "filterdelays",
+    keyword = "delay, reverb, effect",
     units = {{
         title = "Filter Delay",
-        category = "YRN1",
-        moduleName = "FilterDelay"
+        category = "Delays and Reverb",
+        moduleName = "FilterDelay",
+        keywords = "delay, effect",
     }, {
         title = "Feedback Delay Network",
-        category = "YRN1",
-        moduleName = "FDN"
+        category = "Delays and Reverb",
+        moduleName = "FDN",
+        keywords = "delay, reverb, effect",
     }}
 }
