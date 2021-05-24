@@ -47,11 +47,15 @@ function FDN:init(args)
 end
 
 function FDN:onLoadGraph(channelCount)
-    local levelAdapter = self:createAdapterControl("levelAdapter")
+    local inLevelAdapter = self:createAdapterControl("inLevelAdapter")
     local inLevelL = self:addObject("inLevelL", app.ConstantGain())
-    tie(inLevelL, "Gain", levelAdapter, "Out")
+    tie(inLevelL, "Gain", inLevelAdapter, "Out")
     local inLevelR = self:addObject("inLevelR", app.ConstantGain())
-    tie(inLevelR, "Gain", levelAdapter, "Out")
+    tie(inLevelR, "Gain", inLevelAdapter, "Out")
+
+    local xfade = self:addObject("xfade", app.StereoCrossFade())
+    local fader = self:createControl("fader", app.GainBias())
+    connect(fader, "Out", xfade, "Fade")
 
     local eq1Mix = self:addObject("eq1Mix", app.Sum())
     local eq2Mix = self:addObject("eq2Mix", app.Sum())
@@ -129,9 +133,6 @@ function FDN:onLoadGraph(channelCount)
     local fdnMixL = self:addObject("fdnMixL", app.Sum())
     local fdnMixR = self:addObject("fdnMixR", app.Sum())
 
-    local outMixL = self:addObject("outMixL", app.Sum())
-    local outMixR = self:addObject("outMixR", app.Sum())
-
     if channelCount == 2 then
         connect(self, "In1", inLevelL, "In")
         connect(self, "In2", inLevelR, "In")
@@ -182,17 +183,14 @@ function FDN:onLoadGraph(channelCount)
     connect(feedback3, "Out", fdnMixL, "Right")
     connect(feedback4, "Out", fdnMixR, "Right")
 
-    connect(fdnMixL, "Out", outMixL, "Right")
-    connect(fdnMixR, "Out", outMixR, "Right")
+    connect(fdnMixL, "Out", xfade, "Left A")
+    connect(fdnMixR, "Out", xfade, "Right A")
 
+    connect(self, "In1", xfade, "Left B")
+    connect(xfade, "Left Out", self, "Out1")
     if channelCount == 2 then
-        connect(self, "In1", outMixL, "Left")
-        connect(self, "In2", outMixR, "Left")
-        connect(outMixL, "Out", self, "Out1")
-        connect(outMixR, "Out", self, "Out2")
-    else
-        connect(self, "In1", outMixL, "Left")
-        connect(outMixL, "Out", self, "Out1")
+        connect(self, "In2", xfade, "Right B")
+        connect(xfade, "Right Out", self, "Out2")
     end
 end
 
@@ -263,17 +261,17 @@ function FDN:createEqLowControl(toneControl)
 end
 
 function FDN:modulate(name, time, modulation, frequency)
-    local sine = self:addObject(name.."sine", libcore.SineOscillator())
-    local freq = self:addObject(name.."freq", app.Constant())
+    local sine = self:addObject(name .. "sine", libcore.SineOscillator())
+    local freq = self:addObject(name .. "freq", app.Constant())
     freq:hardSet("Value", frequency)
     connect(freq, "Out", sine, "Fundamental")
-    local scaledSine = self:addObject(name.."scale", app.GainBias())
+    local scaledSine = self:addObject(name .. "scale", app.GainBias())
     scaledSine:hardSet("Bias", 1.0)
-    local fraction = self:addObject(name.."frac", app.Constant())
+    local fraction = self:addObject(name .. "frac", app.Constant())
     fraction:hardSet("Value", 0.1)
     tie(scaledSine, "Gain", "*", fraction, "Value", modulation, "Out")
     connect(sine, "Out", scaledSine, "In")
-    local mult = self:addObject(name.."mult", app.Multiply())
+    local mult = self:addObject(name .. "mult", app.Multiply())
     connect(time, "Out", mult, "Left")
     connect(scaledSine, "Out", mult, "Right")
     return mult
@@ -288,7 +286,7 @@ end
 function FDN:onLoadViews(objects, branches)
     local controls = {}
     local views = {
-        expanded = {"delay", "feedback", "tone", "mod", "level"},
+        expanded = {"delay", "feedback", "tone", "mod", "input", "wet"},
         collapsed = {}
     }
 
@@ -341,14 +339,24 @@ function FDN:onLoadViews(objects, branches)
         initialBias = 0.02
     }
 
-    controls.level = GainBias {
-        button = "level",
+    controls.input = GainBias {
+        button = "input",
         description = "FDN Input Level",
-        branch = branches.levelAdapter,
-        gainbias = objects.levelAdapter,
-        range = objects.levelAdapter,
+        branch = branches.inLevelAdapter,
+        gainbias = objects.inLevelAdapter,
+        range = objects.inLevelAdapter,
         biasMap = Encoder.getMap("unit"),
         initialBias = 0.8
+    }
+
+    controls.wet = GainBias {
+        button = "wet",
+        branch = branches.fader,
+        description = "Wet/Dry",
+        gainbias = objects.fader,
+        range = objects.faderRange,
+        biasMap = Encoder.getMap("unit"),
+        initialBias = 0.4
     }
 
     return controls, views
