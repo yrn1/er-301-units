@@ -76,19 +76,10 @@ function FDN:onLoadGraph(channelCount)
     delay34:allocateTimeUpTo(5.0)
 
     local delayAdapter = self:createAdapterControl("delayAdapter")
-    -- local delayTime1 = self:addObject("delayTime1", app.ConstantGain())
-    -- delayTime1:hardSet("Gain", 0.365994)
-    -- connect(delay, "Out", delayTime1, "In")
     local delayScale1 = self:addObject("delayScale1", app.Constant())
     delayScale1:hardSet("Value", 0.365994)
-    -- local delayTime2 = self:addObject("delayTime2", app.ConstantGain())
-    -- delayTime2:hardSet("Gain", 0.573487)
-    -- connect(delay, "Out", delayTime2, "In")
     local delayScale2 = self:addObject("delayScale2", app.Constant())
     delayScale2:hardSet("Value", 0.573487)
-    -- local delayTime3 = self:addObject("delayTime3", app.ConstantGain())
-    -- delayTime3:hardSet("Gain", 0.775216)
-    -- connect(delay, "Out", delayTime3, "In")
     local delayScale3 = self:addObject("delayScale3", app.Constant())
     delayScale3:hardSet("Value", 0.775216)
 
@@ -96,16 +87,6 @@ function FDN:onLoadGraph(channelCount)
     tie(delay12, "Right Delay", "*", delayScale2, "Value", delayAdapter, "Out")
     tie(delay34, "Left Delay", "*", delayScale3, "Value", delayAdapter, "Out")
     tie(delay34, "Right Delay", delayAdapter, "Out")
-
-    -- local modulatedDelayTime1 = self:modulate("modulatedDelayTime1", delayTime1, 0.13)
-    -- local modulatedDelayTime2 = self:modulate("modulatedDelayTime2", delayTime2, 0.17)
-    -- local modulatedDelayTime3 = self:modulate("modulatedDelayTime3", delayTime3, 0.19)
-    -- local modulatedDelayTime4 = self:modulate("modulatedDelayTime4", delay, 0.23)
-
-    -- connect(modulatedDelayTime1, "Out", delay1, "Delay")
-    -- connect(modulatedDelayTime2, "Out", delay2, "Delay")
-    -- connect(modulatedDelayTime3, "Out", delay3, "Delay")
-    -- connect(modulatedDelayTime4, "Out", delay4, "Delay")
 
     local dif11 = self:addObject("dif11", app.Sum())
     local dif11r = self:negative("dif11", dif11)
@@ -269,21 +250,6 @@ function FDN:createEqLowControl(toneControl)
     connect(toneControl, "Out", eqRectifyLow, "In")
     connect(eqRectifyLow, "Out", eqLow, "In")
     return eqLow
-end
-
-function FDN:modulate(name, time, frequency)
-    local sine = self:addObject(name .. "sine", libcore.SineOscillator())
-    local freq = self:addObject(name .. "freq", app.Constant())
-    freq:hardSet("Value", frequency)
-    connect(freq, "Out", sine, "Fundamental")
-    local scaledSine = self:addObject(name .. "scale", app.GainBias())
-    scaledSine:hardSet("Bias", 1.0)
-    scaledSine:hardSet("Gain", 0.01)
-    connect(sine, "Out", scaledSine, "In")
-    local mult = self:addObject(name .. "mult", app.Multiply())
-    connect(time, "Out", mult, "Left")
-    connect(scaledSine, "Out", mult, "Right")
-    return mult
 end
 
 local function timeMap(max, n)
