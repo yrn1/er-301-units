@@ -32,6 +32,11 @@ return {
         moduleName = "FilterDelay",
         keywords = "delay, effect",
     }, {
+        title = "Feedback Doppler Delay Network",
+        category = "Delays and Reverb",
+        moduleName = "FDDN",
+        keywords = "delay, reverb, effect",
+    }, {
         title = "Feedback Delay Network",
         category = "Delays and Reverb",
         moduleName = "FDN",
