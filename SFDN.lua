@@ -25,7 +25,7 @@
 -- TOM ERBE - UC SAN DIEGO: REVERB TOPOLOGIES AND DESIGN
 -- http://tre.ucsd.edu/wordpress/wp-content/uploads/2018/10/reverbtopo.pdf
 --
--- Takes 20% CPU in stereo
+-- TODO CPU
 local Class = require "Base.Class"
 local Unit = require "Unit"
 local Encoder = require "Encoder"
@@ -36,17 +36,17 @@ local Utils = require "Utils"
 local Task = require "Unit.MenuControl.Task"
 local MenuHeader = require "Unit.MenuControl.Header"
 
-local FDDN = Class {}
-FDDN:include(Unit)
+local SFDN = Class {}
+SFDN:include(Unit)
 
-function FDDN:init(args)
-    args.title = "Feedback Doppler Delay Network"
+function SFDN:init(args)
+    args.title = "Simple Feedback Delay Network"
     args.mnemonic = "DN"
     args.version = 1
     Unit.init(self, args)
 end
 
-function FDDN:onLoadGraph(channelCount)
+function SFDN:onLoadGraph(channelCount)
     local inLevelAdapter = self:createAdapterControl("inLevelAdapter")
     local inLevelL = self:addObject("inLevelL", app.ConstantGain())
     tie(inLevelL, "Gain", inLevelAdapter, "Out")
@@ -70,31 +70,23 @@ function FDDN:onLoadGraph(channelCount)
     local eq3 = self:createEq("eq3", eqHigh, eqMid, eqLow)
     local eq4 = self:createEq("eq4", eqHigh, eqMid, eqLow)
 
-    local delay1 = self:addObject("delay1", libcore.DopplerDelay(5.0))
-    local delay2 = self:addObject("delay2", libcore.DopplerDelay(5.0))
-    local delay3 = self:addObject("delay3", libcore.DopplerDelay(5.0))
-    local delay4 = self:addObject("delay4", libcore.DopplerDelay(5.0))
-    local delay = self:createControl("delay", app.GainBias())
-    local delayTime1 = self:addObject("delayTime1", app.ConstantGain())
-    delayTime1:hardSet("Gain", 0.365994)
-    connect(delay, "Out", delayTime1, "In")
-    local delayTime2 = self:addObject("delayTime2", app.ConstantGain())
-    delayTime2:hardSet("Gain", 0.573487)
-    connect(delay, "Out", delayTime2, "In")
-    local delayTime3 = self:addObject("delayTime3", app.ConstantGain())
-    delayTime3:hardSet("Gain", 0.775216)
-    connect(delay, "Out", delayTime3, "In")
+    local delay12 = self:addObject("delay12", libcore.Delay(2))
+    delay12:allocateTimeUpTo(5.0)
+    local delay34 = self:addObject("delay34", libcore.Delay(2))
+    delay34:allocateTimeUpTo(5.0)
 
-    local modulation = self:createAdapterControl("modulation")
-    local modulatedDelayTime1 = self:modulate("modulatedDelayTime1", delayTime1, modulation, 0.13)
-    local modulatedDelayTime2 = self:modulate("modulatedDelayTime2", delayTime2, modulation, 0.17)
-    local modulatedDelayTime3 = self:modulate("modulatedDelayTime3", delayTime3, modulation, 0.19)
-    local modulatedDelayTime4 = self:modulate("modulatedDelayTime4", delay, modulation, 0.23)
+    local delayAdapter = self:createAdapterControl("delayAdapter")
+    local delayScale1 = self:addObject("delayScale1", app.Constant())
+    delayScale1:hardSet("Value", 0.365994)
+    local delayScale2 = self:addObject("delayScale2", app.Constant())
+    delayScale2:hardSet("Value", 0.573487)
+    local delayScale3 = self:addObject("delayScale3", app.Constant())
+    delayScale3:hardSet("Value", 0.775216)
 
-    connect(modulatedDelayTime1, "Out", delay1, "Delay")
-    connect(modulatedDelayTime2, "Out", delay2, "Delay")
-    connect(modulatedDelayTime3, "Out", delay3, "Delay")
-    connect(modulatedDelayTime4, "Out", delay4, "Delay")
+    tie(delay12, "Left Delay", "*", delayScale1, "Value", delayAdapter, "Out")
+    tie(delay12, "Right Delay", "*", delayScale2, "Value", delayAdapter, "Out")
+    tie(delay34, "Left Delay", "*", delayScale3, "Value", delayAdapter, "Out")
+    tie(delay34, "Right Delay", delayAdapter, "Out")
 
     local dif11 = self:addObject("dif11", app.Sum())
     local dif11r = self:negative("dif11", dif11)
@@ -145,19 +137,19 @@ function FDDN:onLoadGraph(channelCount)
     connect(eq1Mix, "Out", eq1, "In")
     connect(eq2Mix, "Out", eq2, "In")
 
-    connect(eq1, "Out", delay1, "In")
-    connect(eq2, "Out", delay2, "In")
-    connect(eq3, "Out", delay3, "In")
-    connect(eq4, "Out", delay4, "In")
+    connect(eq1, "Out", delay12, "Left In")
+    connect(eq2, "Out", delay12, "Right In")
+    connect(eq3, "Out", delay34, "Left In")
+    connect(eq4, "Out", delay34, "Right In")
 
-    connect(delay1, "Out", dif11, "Left")
-    connect(delay1, "Out", sum12, "Left")
-    connect(delay2, "Out", dif11r, "In")
-    connect(delay2, "Out", sum12r, "In")
-    connect(delay3, "Out", dif13, "Left")
-    connect(delay3, "Out", sum14, "Left")
-    connect(delay4, "Out", dif13r, "In")
-    connect(delay4, "Out", sum14r, "In")
+    connect(delay12, "Left Out", dif11, "Left")
+    connect(delay12, "Left Out", sum12, "Left")
+    connect(delay12, "Right Out", dif11r, "In")
+    connect(delay12, "Right Out", sum12r, "In")
+    connect(delay34, "Left Out", dif13, "Left")
+    connect(delay34, "Left Out", sum14, "Left")
+    connect(delay34, "Right Out", dif13r, "In")
+    connect(delay34, "Right Out", sum14r, "In")
 
     connect(dif11, "Out", dif21, "Left")
     connect(dif11, "Out", sum22, "Left")
@@ -194,7 +186,7 @@ function FDDN:onLoadGraph(channelCount)
     end
 end
 
-function FDDN:createControl(name, type)
+function SFDN:createControl(name, type)
     local control = self:addObject(name, type)
     local controlRange = self:addObject(name .. "Range", app.MinMax())
     connect(control, "Out", controlRange, "In")
@@ -202,27 +194,27 @@ function FDDN:createControl(name, type)
     return control
 end
 
-function FDDN:createAdapterControl(name)
+function SFDN:createAdapterControl(name)
     local adapter = self:addObject(name, app.ParameterAdapter())
     self:addMonoBranch(name, adapter, "In", adapter, "Out")
     return adapter
 end
 
-function FDDN:positive(name, sum)
+function SFDN:positive(name, sum)
     local negation = self:addObject(name .. "r", app.ConstantGain())
     negation:hardSet("Gain", 1.0)
     connect(negation, "Out", sum, "Right")
     return negation
 end
 
-function FDDN:negative(name, sum)
+function SFDN:negative(name, sum)
     local negation = self:addObject(name .. "r", app.ConstantGain())
     negation:hardSet("Gain", -1.0)
     connect(negation, "Out", sum, "Right")
     return negation
 end
 
-function FDDN:createEq(name, high, mid, low)
+function SFDN:createEq(name, high, mid, low)
     local eq = self:addObject(name, libcore.Equalizer3())
     eq:hardSet("Low Freq", 3000.0)
     eq:hardSet("High Freq", 2000.0)
@@ -232,7 +224,7 @@ function FDDN:createEq(name, high, mid, low)
     return eq
 end
 
-function FDDN:createEqHighControl(toneControl)
+function SFDN:createEqHighControl(toneControl)
     local eqRectifyHigh = self:addObject("eqRectifyHigh", libcore.Rectify())
     eqRectifyHigh:setOptionValue("Type", 2)
     local eqHigh = self:addObject("eqHigh", app.GainBias())
@@ -243,13 +235,13 @@ function FDDN:createEqHighControl(toneControl)
     return eqHigh
 end
 
-function FDDN:createEqMidControl()
+function SFDN:createEqMidControl()
     local eqMid = self:addObject("eqMid", app.Constant())
     eqMid:hardSet("Value", 1.0)
     return eqMid
 end
 
-function FDDN:createEqLowControl(toneControl)
+function SFDN:createEqLowControl(toneControl)
     local eqRectifyLow = self:addObject("eqRectifyLow", libcore.Rectify())
     eqRectifyLow:setOptionValue("Type", 1)
     local eqLow = self:addObject("eqLow", app.GainBias())
@@ -260,49 +252,37 @@ function FDDN:createEqLowControl(toneControl)
     return eqLow
 end
 
-function FDDN:modulate(name, time, modulation, frequency)
-    local sine = self:addObject(name .. "sine", libcore.SineOscillator())
-    local freq = self:addObject(name .. "freq", app.Constant())
-    freq:hardSet("Value", frequency)
-    connect(freq, "Out", sine, "Fundamental")
-    local scaledSine = self:addObject(name .. "scale", app.GainBias())
-    scaledSine:hardSet("Bias", 1.0)
-    local fraction = self:addObject(name .. "frac", app.Constant())
-    fraction:hardSet("Value", 0.1)
-    tie(scaledSine, "Gain", "*", fraction, "Value", modulation, "Out")
-    connect(sine, "Out", scaledSine, "In")
-    local mult = self:addObject(name .. "mult", app.Multiply())
-    connect(time, "Out", mult, "Left")
-    connect(scaledSine, "Out", mult, "Right")
-    return mult
-end
-
 local function timeMap(max, n)
     local map = app.LinearDialMap(0, max)
     map:setCoarseRadix(n)
     return map
 end
 
-function FDDN:onLoadViews(objects, branches)
+local function feedbackMap()
+    local map = app.LinearDialMap(-12, 0)
+    map:setZero(-160)
+    map:setSteps(1, 0.1, 0.01, 0.001);
+    return map
+end
+
+function SFDN:onLoadViews(objects, branches)
     local controls = {}
     local views = {
-        expanded = {"delay", "feedback", "tone", "mod", "input", "wet"},
+        expanded = {"delay", "feedback", "tone", "input", "wet"},
         collapsed = {}
     }
 
-    local allocated1 = self.objects.delay1:maximumDelayTime()
-    local allocated2 = self.objects.delay2:maximumDelayTime()
-    local allocated3 = self.objects.delay3:maximumDelayTime()
-    local allocated4 = self.objects.delay4:maximumDelayTime()
-    local allocated = math.min(allocated1, allocated2, allocated3, allocated4)
+    local allocated1 = self.objects.delay12:maximumDelayTime()
+    local allocated2 = self.objects.delay34:maximumDelayTime()
+    local allocated = math.min(allocated1, allocated2)
     allocated = Utils.round(allocated, 1)
 
     controls.delay = GainBias {
         button = "delay",
         description = "Delay",
-        branch = branches.delay,
-        gainbias = objects.delay,
-        range = objects.delayRange,
+        branch = branches.delayAdapter,
+        gainbias = objects.delayAdapter,
+        range = objects.delayAdapter,
         biasMap = timeMap(allocated, 100),
         initialBias = 0.3,
         biasUnits = app.unitSecs
@@ -314,11 +294,10 @@ function FDDN:onLoadViews(objects, branches)
         branch = branches.feedbackAdapter,
         gainbias = objects.feedbackAdapter,
         range = objects.feedbackAdapter,
-        biasMap = Encoder.getMap("feedback"),
+        biasMap = feedbackMap(),
         biasUnits = app.unitDecibels,
         initialBias = 0.95
     }
-    controls.feedback:setTextBelow(-35.9, "-inf dB")
 
     controls.tone = GainBias {
         button = "tone",
@@ -327,16 +306,6 @@ function FDDN:onLoadViews(objects, branches)
         gainbias = objects.tone,
         range = objects.toneRange,
         biasMap = Encoder.getMap("[-1,1]")
-    }
-
-    controls.mod = GainBias {
-        button = "mod",
-        description = "Modulation",
-        branch = branches.modulation,
-        gainbias = objects.modulation,
-        range = objects.modulation,
-        biasMap = Encoder.getMap("[0,1]"),
-        initialBias = 0.02
     }
 
     controls.input = GainBias {
@@ -362,12 +331,10 @@ function FDDN:onLoadViews(objects, branches)
     return controls, views
 end
 
-function FDDN:onRemove()
-    self.objects.delay1:deallocate()
-    self.objects.delay2:deallocate()
-    self.objects.delay3:deallocate()
-    self.objects.delay4:deallocate()
+function SFDN:onRemove()
+    self.objects.delay12:deallocate()
+    self.objects.delay34:deallocate()
     Unit.onRemove(self)
 end
 
-return FDDN
+return SFDN
