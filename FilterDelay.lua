@@ -22,6 +22,7 @@
 -- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 --
 -- Takes 9-10% CPU in stereo
+local YBase = require "filterdelays.YBase"
 local Class = require "Base.Class"
 local Unit = require "Unit"
 local Encoder = require "Encoder"
@@ -33,13 +34,13 @@ local Task = require "Unit.MenuControl.Task"
 local MenuHeader = require "Unit.MenuControl.Header"
 
 local FilterDelay = Class {}
-FilterDelay:include(Unit)
+FilterDelay:include(YBase)
 
 function FilterDelay:init(args)
     args.title = "Filter Delay"
     args.mnemonic = "FD"
     args.version = 1
-    Unit.init(self, args)
+    YBase.init(self, args)
 end
 
 function FilterDelay:onLoadGraph(channelCount)
@@ -121,20 +122,6 @@ function FilterDelay:onLoadGraph(channelCount)
     end
 end
 
-function FilterDelay:createControl(name, type)
-    local control = self:addObject(name, type)
-    local controlRange = self:addObject(name .. "Range", app.MinMax())
-    connect(control, "Out", controlRange, "In")
-    self:addMonoBranch(name, control, "In", control, "Out")
-    return control
-end
-
-function FilterDelay:createAdapterControl(name)
-    local adapter = self:addObject(name, app.ParameterAdapter())
-    self:addMonoBranch(name, adapter, "In", adapter, "Out")
-    return adapter
-end
-
 function FilterDelay:createTap(tapEdge)
     local tap = self:addObject("tap", libcore.TapTempo())
     tap:setBaseTempo(120)
@@ -144,44 +131,6 @@ function FilterDelay:createTap(tapEdge)
     local divider = self:createAdapterControl("divider")
     tie(tap, "Divider", divider, "Out")
     return tap
-end
-
-function FilterDelay:createEq(name, high, mid, low)
-    local eq = self:addObject(name, libcore.Equalizer3())
-    eq:hardSet("Low Freq", 3000.0)
-    eq:hardSet("High Freq", 2000.0)
-    connect(high, "Out", eq, "High Gain")
-    connect(mid, "Out", eq, "Mid Gain")
-    connect(low, "Out", eq, "Low Gain")
-    return eq
-end
-
-function FilterDelay:createEqHighControl(toneControl)
-    local eqRectifyHigh = self:addObject("eqRectifyHigh", libcore.Rectify())
-    eqRectifyHigh:setOptionValue("Type", 2)
-    local eqHigh = self:addObject("eqHigh", app.GainBias())
-    eqHigh:hardSet("Gain", 1.0)
-    eqHigh:hardSet("Bias", 1.0)
-    connect(toneControl, "Out", eqRectifyHigh, "In")
-    connect(eqRectifyHigh, "Out", eqHigh, "In")
-    return eqHigh
-end
-
-function FilterDelay:createEqMidControl()
-    local eqMid = self:addObject("eqMid", app.Constant())
-    eqMid:hardSet("Value", 1.0)
-    return eqMid
-end
-
-function FilterDelay:createEqLowControl(toneControl)
-    local eqRectifyLow = self:addObject("eqRectifyLow", libcore.Rectify())
-    eqRectifyLow:setOptionValue("Type", 1)
-    local eqLow = self:addObject("eqLow", app.GainBias())
-    eqLow:hardSet("Gain", -1.0)
-    eqLow:hardSet("Bias", 1.0)
-    connect(toneControl, "Out", eqRectifyLow, "In")
-    connect(eqRectifyLow, "Out", eqLow, "In")
-    return eqLow
 end
 
 function FilterDelay:createSpread(tap, tapEdge)

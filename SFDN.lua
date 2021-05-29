@@ -26,6 +26,7 @@
 -- http://tre.ucsd.edu/wordpress/wp-content/uploads/2018/10/reverbtopo.pdf
 --
 -- TODO CPU
+local YBase = require "filterdelays.YBase"
 local Class = require "Base.Class"
 local Unit = require "Unit"
 local Encoder = require "Encoder"
@@ -37,13 +38,13 @@ local Task = require "Unit.MenuControl.Task"
 local MenuHeader = require "Unit.MenuControl.Header"
 
 local SFDN = Class {}
-SFDN:include(Unit)
+SFDN:include(YBase)
 
 function SFDN:init(args)
     args.title = "Simple Feedback Delay Network"
     args.mnemonic = "DN"
     args.version = 1
-    Unit.init(self, args)
+    YBase.init(self, args)
 end
 
 function SFDN:onLoadGraph(channelCount)
@@ -184,72 +185,6 @@ function SFDN:onLoadGraph(channelCount)
         connect(self, "In2", xfade, "Right B")
         connect(xfade, "Right Out", self, "Out2")
     end
-end
-
-function SFDN:createControl(name, type)
-    local control = self:addObject(name, type)
-    local controlRange = self:addObject(name .. "Range", app.MinMax())
-    connect(control, "Out", controlRange, "In")
-    self:addMonoBranch(name, control, "In", control, "Out")
-    return control
-end
-
-function SFDN:createAdapterControl(name)
-    local adapter = self:addObject(name, app.ParameterAdapter())
-    self:addMonoBranch(name, adapter, "In", adapter, "Out")
-    return adapter
-end
-
-function SFDN:positive(name, sum)
-    local negation = self:addObject(name .. "r", app.ConstantGain())
-    negation:hardSet("Gain", 1.0)
-    connect(negation, "Out", sum, "Right")
-    return negation
-end
-
-function SFDN:negative(name, sum)
-    local negation = self:addObject(name .. "r", app.ConstantGain())
-    negation:hardSet("Gain", -1.0)
-    connect(negation, "Out", sum, "Right")
-    return negation
-end
-
-function SFDN:createEq(name, high, mid, low)
-    local eq = self:addObject(name, libcore.Equalizer3())
-    eq:hardSet("Low Freq", 3000.0)
-    eq:hardSet("High Freq", 2000.0)
-    connect(high, "Out", eq, "High Gain")
-    connect(mid, "Out", eq, "Mid Gain")
-    connect(low, "Out", eq, "Low Gain")
-    return eq
-end
-
-function SFDN:createEqHighControl(toneControl)
-    local eqRectifyHigh = self:addObject("eqRectifyHigh", libcore.Rectify())
-    eqRectifyHigh:setOptionValue("Type", 2)
-    local eqHigh = self:addObject("eqHigh", app.GainBias())
-    eqHigh:hardSet("Gain", 1.0)
-    eqHigh:hardSet("Bias", 1.0)
-    connect(toneControl, "Out", eqRectifyHigh, "In")
-    connect(eqRectifyHigh, "Out", eqHigh, "In")
-    return eqHigh
-end
-
-function SFDN:createEqMidControl()
-    local eqMid = self:addObject("eqMid", app.Constant())
-    eqMid:hardSet("Value", 1.0)
-    return eqMid
-end
-
-function SFDN:createEqLowControl(toneControl)
-    local eqRectifyLow = self:addObject("eqRectifyLow", libcore.Rectify())
-    eqRectifyLow:setOptionValue("Type", 1)
-    local eqLow = self:addObject("eqLow", app.GainBias())
-    eqLow:hardSet("Gain", -1.0)
-    eqLow:hardSet("Bias", 1.0)
-    connect(toneControl, "Out", eqRectifyLow, "In")
-    connect(eqRectifyLow, "Out", eqLow, "In")
-    return eqLow
 end
 
 local function timeMap(max, n)
