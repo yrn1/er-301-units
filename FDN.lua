@@ -118,16 +118,16 @@ function FDN:onLoadGraph(channelCount)
     local half = self:addObject("half", app.Constant())
     half:hardSet("Value", 0.5)
     local feedback1 = self:addObject("feedback1", app.ConstantGain())
-    feedback1:setClampInDecibels(-35.9)
+    feedback1:setClampInDecibels(-23.9)
     tie(feedback1, "Gain", "*", half, "Value", feedbackAdapter, "Out")
     local feedback2 = self:addObject("feedback2", app.ConstantGain())
-    feedback2:setClampInDecibels(-35.9)
+    feedback2:setClampInDecibels(-23.9)
     tie(feedback2, "Gain", "*", half, "Value", feedbackAdapter, "Out")
     local feedback3 = self:addObject("feedback3", app.ConstantGain())
-    feedback3:setClampInDecibels(-35.9)
+    feedback3:setClampInDecibels(-23.9)
     tie(feedback3, "Gain", "*", half, "Value", feedbackAdapter, "Out")
     local feedback4 = self:addObject("feedback4", app.ConstantGain())
-    feedback4:setClampInDecibels(-35.9)
+    feedback4:setClampInDecibels(-23.9)
     tie(feedback4, "Gain", "*", half, "Value", feedbackAdapter, "Out")
 
     local fdnMixL = self:addObject("fdnMixL", app.Sum())
@@ -283,6 +283,13 @@ local function timeMap(max, n)
     return map
 end
 
+local function feedbackMap()
+    local map = app.LinearDialMap(-18, 0)
+    map:setZero(-160)
+    map:setSteps(1, 0.1, 0.01, 0.001);
+    return map
+end
+
 function FDN:onLoadViews(objects, branches)
     local controls = {}
     local views = {
@@ -314,11 +321,11 @@ function FDN:onLoadViews(objects, branches)
         branch = branches.feedbackAdapter,
         gainbias = objects.feedbackAdapter,
         range = objects.feedbackAdapter,
-        biasMap = Encoder.getMap("feedback"),
+        biasMap = feedbackMap(),
         biasUnits = app.unitDecibels,
         initialBias = 0.95
     }
-    controls.feedback:setTextBelow(-35.9, "-inf dB")
+    controls.feedback:setTextBelow(-17.9, "-inf dB")
 
     controls.tone = GainBias {
         button = "tone",
