@@ -25,7 +25,7 @@
 -- TOM ERBE - UC SAN DIEGO: REVERB TOPOLOGIES AND DESIGN
 -- http://tre.ucsd.edu/wordpress/wp-content/uploads/2018/10/reverbtopo.pdf
 --
--- TODO CPU
+-- TODO CPU 11%-12%
 local YBase = require "filterdelays.YBase"
 local Class = require "Base.Class"
 local Unit = require "Unit"
