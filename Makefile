@@ -1,5 +1,5 @@
 PKGNAME ?= FilterDelays
-PKGVERSION ?= 0.6.04
+PKGVERSION ?= 0.6.05
 ER301_SRC ?= ../er-301/
 
 ASSETS = $(wildcard *.lua)

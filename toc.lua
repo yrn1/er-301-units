@@ -22,24 +22,26 @@
 -- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 --
 return {
-    title = "Filter Delays",
-    author = "YRN1",
-    name = "filterdelays",
-    keyword = "delay, reverb, effect",
-    units = {{
-        title = "Filter Delay",
-        category = "Delays and Reverb",
-        moduleName = "FilterDelay",
-        keywords = "delay, effect",
+  title = "Filter Delays",
+  author = "YRN1",
+  name = "filterdelays",
+  keyword = "delay, reverb, effect",
+  units = {
+    {
+      title = "Filter Delay",
+      category = "Delays and Reverb",
+      moduleName = "FilterDelay",
+      keywords = "delay, effect"
     }, {
-        title = "Feedback Delay Network",
-        category = "Delays and Reverb",
-        moduleName = "FDN",
-        keywords = "delay, reverb, effect",
+      title = "Feedback Delay Network",
+      category = "Delays and Reverb",
+      moduleName = "FDN",
+      keywords = "delay, reverb, effect"
     }, {
-        title = "Simple Feedback Delay Network",
-        category = "Delays and Reverb",
-        moduleName = "SFDN",
-        keywords = "delay, reverb, effect",
-    }}
+      title = "Simple Feedback Delay Network",
+      category = "Delays and Reverb",
+      moduleName = "SFDN",
+      keywords = "delay, reverb, effect"
+    }
+  }
 }
