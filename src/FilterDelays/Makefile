@@ -1,13 +1,15 @@
 PKGNAME ?= FilterDelays
 PKGVERSION ?= 0.6.05
-ER301_SRC ?= ../er-301/
+ER301_SRC ?= ../../../er-301/
 
 ASSETS = $(wildcard *.lua)
-PACKAGE_FILE = $(PKGNAME)-$(PKGVERSION).pkg
+BUILDDIR = ../../build
+PACKAGE_FILE = $(BUILDDIR)/$(PKGNAME)-$(PKGVERSION).pkg
 
 all: $(PACKAGE_FILE)
 
 $(PACKAGE_FILE): $(ASSETS)
+	mkdir -p $(BUILDDIR)
 	@echo [ZIP $@]
 	@rm -f $@
 	@zip -j $@ $(ASSETS)
