@@ -42,6 +42,11 @@ return {
       category = "Delays and Reverb",
       moduleName = "SFDN",
       keywords = "delay, reverb, effect"
+    }, {
+      title = "Filtered Feedback Delay Network",
+      category = "Delays and Reverb",
+      moduleName = "FFDN",
+      keywords = "delay, reverb, effect"
     }
   }
 }
