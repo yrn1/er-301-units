@@ -1,5 +1,5 @@
 PROJECTS = FilterDelays
 
-all list emu clean: $(PROJECTS)
+all list clean: $(PROJECTS)
 $(PROJECTS):
 	$(MAKE) -C src/$@ $(MAKECMDGOALS)
