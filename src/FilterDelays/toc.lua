@@ -33,6 +33,11 @@ return {
       moduleName = "FilterDelay",
       keywords = "delay, effect"
     }, {
+      title = "Feedback Effect Delay",
+      category = "Delays and Reverb",
+      moduleName = "EffectDelay",
+      keywords = "delay, effect"
+    }, {
       title = "Feedback Delay Network",
       category = "Delays and Reverb",
       moduleName = "FDN",
