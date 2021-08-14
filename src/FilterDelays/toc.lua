@@ -29,28 +29,15 @@ return {
   units = {
     {
       title = "Filter Delay",
-      category = "Delays and Reverb",
       moduleName = "FilterDelay",
       keywords = "delay, effect"
     }, {
-      title = "Feedback Effect Delay",
-      category = "Delays and Reverb",
-      moduleName = "EffectDelay",
-      keywords = "delay, effect"
-    }, {
       title = "Feedback Delay Network",
-      category = "Delays and Reverb",
       moduleName = "FDN",
       keywords = "delay, reverb, effect"
     }, {
       title = "Simple Feedback Delay Network",
-      category = "Delays and Reverb",
       moduleName = "SFDN",
-      keywords = "delay, reverb, effect"
-    }, {
-      title = "Filtered Feedback Delay Network",
-      category = "Delays and Reverb",
-      moduleName = "FFDN",
       keywords = "delay, reverb, effect"
     }
   }
