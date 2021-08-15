@@ -40,9 +40,9 @@ return {
       moduleName = "SFDN",
       keywords = "delay, reverb, effect"
     }, {
-      title = "Karplus Strong",
-      moduleName = "KarplusStrong",
-      keywords = "delay, source, pitch"
+      title = "Tuned Filter Delay",
+      moduleName = "TunedFilterDelay",
+      keywords = "delay, effect, pitch"
     }
   }
 }

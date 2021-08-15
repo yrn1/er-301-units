@@ -84,12 +84,6 @@ function YBase:createEqLowControl(toneControl)
   return eqLow
 end
 
-function YBase:constant(name, value)
-  local constant = self:addObject(name, app.Constant())
-  constant:hardSet("Value", value)
-  return constant
-end
-
 function YBase:positive(name, sum)
   local negation = self:addObject(name .. "r", app.ConstantGain())
   negation:hardSet("Gain", 1.0)
