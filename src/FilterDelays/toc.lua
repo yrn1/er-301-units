@@ -39,6 +39,10 @@ return {
       title = "Simple Feedback Delay Network",
       moduleName = "SFDN",
       keywords = "delay, reverb, effect"
+    }, {
+      title = "Karplus Strong",
+      moduleName = "KarplusStrong",
+      keywords = "delay, source, pitch"
     }
   }
 }
