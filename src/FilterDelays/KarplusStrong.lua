@@ -53,10 +53,21 @@ function KarplusStrong:onLoadGraph(channelCount)
   local f0 = self:createAdapterControl("f0")
   local exp = self:addObject("exp", libcore.VoltPerOctave())
   local frequency = self:addObject("frequency", app.ConstantGain())
+  local hertzToSeconds = self:addObject("hertzToSeconds", libcore.RationalMultiply())
+  local one = self:constant("One", 1.0)
+  local frameOffset = self:addObject("frameOffset", app.ConstantOffset())
+  frameOffset:hardSet("Offset", 0 - (app.globalConfig.frameLength / app.globalConfig.sampleRate))
+  local clippedDelayTime = self:addObject("clippedDelayTime", libcore.Clipper(0.00001, 2))
   tie(frequency, "Gain", f0, "Out")
   connect(tune, "Out", exp, "In")
   connect(exp, "Out", frequency, "In")
   connect(frequency, "Out", self, "Out1")
+  connect(one, "Out", hertzToSeconds, "In")
+  connect(one, "Out", hertzToSeconds, "Numerator")
+  connect(frequency, "Out", hertzToSeconds, "Divisor")
+  connect(hertzToSeconds, "Out", frameOffset, "In")
+  connect(frameOffset, "Out", clippedDelayTime, "In")
+  connect(clippedDelayTime, "Out", delay, "Delay")
 
   local xfade = self:addObject("xfade", app.CrossFade())
   local fader = self:createControl("fader", app.GainBias())
@@ -70,20 +81,6 @@ function KarplusStrong:onLoadGraph(channelCount)
 
   tie(feedbackGain, "Gain", feedbackGainAdapter, "Out")
 
-  local hertzToSeconds = self:addObject("hertzToSeconds", libcore.RationalMultiply())
-  local one = self:constant("One", 1.0)
-  connect(one, "Out", hertzToSeconds, "In")
-  connect(one, "Out", hertzToSeconds, "Numerator")
-  connect(frequency, "Out", hertzToSeconds, "Divisor")
-  local frameOffset = self:addObject("frameOffset", app.ConstantOffset())
-  frameOffset:hardSet("Offset", 0 - (app.globalConfig.frameLength / app.globalConfig.sampleRate))
-  connect(hertzToSeconds, "Out", frameOffset, "In")
-
-  local clippedDelayTime = self:addObject("clippedDelayTime", libcore.Clipper(0.00001, 2))
-  connect(frameOffset, "Out", clippedDelayTime, "In")
-
-  connect(clippedDelayTime, "Out", delay, "Delay")
-
   connect(self, "In1", xfade, "B")
   connect(self, "In1", feedbackMix, "Left")
   connect(feedbackMix, "Out", delay, "In")
@@ -92,6 +89,9 @@ function KarplusStrong:onLoadGraph(channelCount)
 
   connect(feedbackGain, "Out", feedbackMix, "Right")
   connect(xfade, "Out", self, "Out1")
+  if channelCount == 2 then
+    connect(xfade, "Out", self, "Out2")
+  end
 end
 
 function KarplusStrong:onLoadViews(objects, branches)
