@@ -1,4 +1,4 @@
-PROJECTS = FilterDelays
+PROJECTS = FilterDelays YUtils
 
 all list clean: $(PROJECTS)
 $(PROJECTS):
