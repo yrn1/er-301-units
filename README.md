@@ -1,3 +1,7 @@
+# No longer maintained!
+
+This repository is no longer maintained. It is replaced by [er-301-custom-units](https://github.com/yrn1/er-301-custom-units).
+
 # ER-301 Custom Units by YRN1
 
 ## ER-301 Filter Delays
